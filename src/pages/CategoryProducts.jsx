@@ -1,6 +1,6 @@
-// src/pages/Cameraproductdetails.jsx - PRODUCTION READY (FIXED STRAPI V4 + PDF DOWNLOAD)
+// src/pages/Cameraproductdetails.jsx - PRODUCTION READY
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Viewer, Worker } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import { Download, ArrowUp, Eye, Camera, FileText } from "lucide-react";
@@ -13,52 +13,8 @@ const getStrapiMedia = (url) => {
   return url.startsWith("http") ? url : `${API_URL}${url}`;
 };
 
-// 🔥 NEW: Force PDF download using fetch + blob (works cross-origin)
-const downloadPDF = async (pdfUrl, filename) => {
-  try {
-    const originalUrl = getStrapiMedia(pdfUrl);
-
-    // Fetch the PDF as a blob
-    const response = await fetch(originalUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.status}`);
-    }
-
-    const blob = await response.blob();
-
-    // Create a temporary download link
-    const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = filename;
-
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Clean up
-    window.URL.revokeObjectURL(blobUrl);
-  } catch (error) {
-    console.error("❌ Error downloading PDF:", error);
-    // Fallback: open in new tab if download fails
-    window.open(getStrapiMedia(pdfUrl), "_blank");
-  }
-};
-
 function Cameraproductdetails() {
-  const {
-    category,
-    productType,
-    model: modelFromUrl,
-    id: idFromUrl,
-  } = useParams();
-  const [searchParams] = useSearchParams();
-
-  // ✅ Get model/id from URL params OR query params (fallback)
-  const model = modelFromUrl || searchParams.get("model");
-  const id = idFromUrl || searchParams.get("id");
-
+  const { category, productType, model } = useParams(); // ✅ Use 'model' not 'id'
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [preview, setPreview] = useState(true);
@@ -69,26 +25,50 @@ function Cameraproductdetails() {
 
   useEffect(() => {
     const loadProduct = async () => {
-      if (!id) {
-        setError("No product ID specified in URL");
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError(null);
 
-        console.log("🔍 Fetching product - ID:", id);
+        console.log(
+          "🔍 Fetching product - Model:",
+          model,
+          "Category:",
+          category,
+        );
 
-        // ✅ STRAPI V4: Use collection endpoint with filter (NOT /api/products/:id)
-        const apiUrl = `${API_URL}/api/products?populate=*&filters[id][$eq]=${id}`;
+        // ✅ Build API URL to fetch by MODEL
+        let apiUrl = `${API_URL}/api/products?populate=*&filters[model][$eq]=${encodeURIComponent(model)}`;
+
+        // Also filter by category to narrow results
+        if (category) {
+          const cameraTypeMap = {
+            "mobile-dvr": "Mobile",
+            "bullet-cameras": "Bullet",
+            "eyeball-cameras": "Eyeball",
+            "dome-cameras": "Dome",
+            "ptz-cameras": "PTZ",
+            "network-video-recorder": "Network",
+            server: "Server",
+            "ai-based-face-recognition": "Ai",
+            "trinai-facial-biostand": "Ai",
+            display: "Display",
+            "smart-gpu-with-ai-camera": "Smart GPU",
+            "thermal-cameras": "Thermal",
+          };
+          const categoryKeyword =
+            cameraTypeMap[category] ||
+            category.split("-")[0].charAt(0).toUpperCase() +
+              category.split("-")[0].slice(1);
+          apiUrl += `&filters[cameraType][$eq]=${categoryKeyword}`;
+        }
+
         console.log("📡 API URL:", apiUrl);
 
         const response = await fetch(apiUrl);
 
         if (!response.ok) {
-          throw new Error(`Strapi error ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`Strapi error ${response.status}: ${errorText}`);
         }
 
         const data = await response.json();
@@ -96,16 +76,11 @@ function Cameraproductdetails() {
 
         if (data.data && data.data.length > 0) {
           setProduct(data.data[0]);
-          console.log(
-            "📦 Product loaded:",
-            data.data[0].name,
-            "ID:",
-            data.data[0].id,
-          );
+          console.log("📦 Product loaded:", data.data[0].name);
           document.title = `${data.data[0].model} - ${data.data[0].name} | Trinai`;
           window.scrollTo(0, 0);
         } else {
-          throw new Error(`Product with ID "${id}" not found`);
+          throw new Error(`Product with model "${model}" not found`);
         }
       } catch (error) {
         console.error("❌ Error loading product:", error);
@@ -115,52 +90,10 @@ function Cameraproductdetails() {
       }
     };
 
-    loadProduct();
-  }, [id]);
-
-  // 🔥 SEO: Add meta tags when product loads
-  useEffect(() => {
-    if (product) {
-      // 1. Set canonical URL (clean version without query params)
-      const cleanUrl = `${window.location.origin}/products/${category}/${productType}`;
-      let canonical = document.querySelector("link[rel='canonical']");
-      if (!canonical) {
-        canonical = document.createElement("link");
-        canonical.rel = "canonical";
-        document.head.appendChild(canonical);
-      }
-      canonical.href = cleanUrl;
-
-      // 2. Set page title
-      document.title = `${product.model} - ${product.name} | Trinai Security Solutions`;
-
-      // 3. Set meta description
-      let metaDesc = document.querySelector("meta[name='description']");
-      if (!metaDesc) {
-        metaDesc = document.createElement("meta");
-        metaDesc.name = "description";
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.content = `Professional ${product.productType || product.name} - ${product.model}. ${product.keyFeatures?.[0] || "High-quality surveillance solution"}`;
-
-      // 4. Open Graph tags (for social sharing)
-      let ogTitle = document.querySelector("meta[property='og:title']");
-      if (!ogTitle) {
-        ogTitle = document.createElement("meta");
-        ogTitle.setAttribute("property", "og:title");
-        document.head.appendChild(ogTitle);
-      }
-      ogTitle.content = `${product.model} - ${product.name}`;
-
-      let ogDesc = document.querySelector("meta[property='og:description']");
-      if (!ogDesc) {
-        ogDesc = document.createElement("meta");
-        ogDesc.setAttribute("property", "og:description");
-        document.head.appendChild(ogDesc);
-      }
-      ogDesc.content = metaDesc.content;
+    if (model) {
+      loadProduct();
     }
-  }, [product, category, productType]);
+  }, [category, productType, model]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -176,7 +109,6 @@ function Cameraproductdetails() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#00ADE7] border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-700 font-semibold">Loading product...</p>
-          <p className="text-gray-500 text-sm mt-2">ID: {id || "undefined"}</p>
         </div>
       </div>
     );
@@ -193,7 +125,7 @@ function Cameraproductdetails() {
           <p className="text-gray-600 mb-4">
             {error || "The requested product could not be found."}
           </p>
-          <div className="flex gap-3 justify-center flex-wrap">
+          <div className="flex gap-3 justify-center">
             <button
               onClick={() => navigate(-1)}
               className="px-5 py-2.5 bg-gradient-to-r from-[#00ADE7] to-[#305292] text-white font-semibold rounded-full hover:opacity-90"
@@ -205,12 +137,6 @@ function Cameraproductdetails() {
               className="px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-300"
             >
               View All Products
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-5 py-2.5 bg-blue-100 text-blue-700 font-semibold rounded-full hover:bg-blue-200"
-            >
-              🔄 Retry
             </button>
           </div>
         </div>
@@ -328,19 +254,14 @@ function Cameraproductdetails() {
                       .
                     </p>
                   </div>
-                  {/* ✅ FIXED: Use downloadPDF function instead of direct link */}
-                  <button
-                    onClick={() =>
-                      downloadPDF(
-                        pdfPath,
-                        `trinai-${slugify(product.model)}.pdf`,
-                      )
-                    }
-                    className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-[#07518a] to-[#0ea5e9] hover:from-[#0565b0] hover:to-[#07518a] text-white w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl cursor-pointer"
+                  <a
+                    href={getStrapiMedia(pdfPath)}
+                    download={`trinai-${slugify(product.model)}.pdf`}
+                    className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-gradient-to-r from-[#07518a] to-[#0ea5e9] hover:from-[#0565b0] hover:to-[#07518a] text-white w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl"
                   >
                     <Download className="w-5 h-5 sm:w-6 sm:h-6" /> Download
                     Documentation
-                  </button>
+                  </a>
                 </div>
               </div>
             )}

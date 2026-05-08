@@ -1,29 +1,121 @@
 // src/pages/Products.jsx
-import React, { useEffect } from "react";
-import bgpng from "../images/acam.png";
-import bullet1 from "../images/bullet1.png";
-import dom1 from "../images/dom1.png";
-import eyeball1 from "../images/eyeball1.png";
-import ptz1 from "../images/ptz1.png";
-import nvr1 from "../images/nvr1.png";
-import server1 from "../images/server1.png";
-import adnvr1 from "../images/adnvr1.png";
-import face1 from "../images/face1.png";
-import display2 from "../images/display2.png";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ScrollTop } from "primereact/scrolltop";
 import { motion } from "framer-motion";
-// ✅ Optional: Import slugify if you want dynamic generation
-// import { slugify } from "../utils/slugify";
+
+// ✅ LOCAL BANNER IMAGE (Keep your original camera image)
+import bgpng from "../images/acam.png";
+
+// ✅ API Service - Strapi ONLY (STRICT MODE)
+const API_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
+
+// Placeholder for missing category images (only for broken URLs)
+const PLACEHOLDER_IMAGE =
+  "https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=No+Image";
 
 const Products = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const navigate = useNavigate();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  const navigate = useNavigate();
 
-  // ✅ Optional helper: Use this if you want to generate slugs dynamically
-  // const categorySlug = (name) => slugify(name);
+  // 🔥 STRICT MODE: Fetch categories from Strapi ONLY
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        setFetchError(null);
+
+        console.log("🔄 Fetching categories from Strapi...");
+
+        // Fetch ONLY active categories, populated with image, sorted by order
+        const response = await fetch(
+          `${API_URL}/api/categories?filters[is_active][$eq]=true&populate=image&sort=order:asc`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Strapi server error: ${response.status}. Is Strapi running?`,
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.data || data.data.length === 0) {
+          throw new Error(
+            "No categories found in Strapi. Please add categories in Strapi Admin.",
+          );
+        }
+
+        setCategories(data.data);
+        console.log(
+          "✅ Categories loaded from Strapi:",
+          data.data.length,
+          "categories",
+        );
+      } catch (error) {
+        console.error("❌ STRAPI FETCH FAILED:", error);
+        setFetchError(error.message);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // 🔴 LOADING STATE
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#00ADE7] border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-700 font-semibold text-lg">
+            Loading from Strapi...
+          </p>
+          <p className="text-gray-500 text-sm mt-2">API: {API_URL}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔴 STRICT ERROR STATE - NO RENDER IF STRAPI DOWN
+  if (fetchError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-gray-100">
+        <div className="text-center max-w-lg p-8 bg-white rounded-2xl shadow-2xl">
+          <div className="text-red-500 text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            Strapi Connection Required
+          </h1>
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 text-left">
+            <p className="text-red-700 font-medium mb-2">Error:</p>
+            <p className="text-red-600 text-sm">{fetchError}</p>
+          </div>
+          <p className="text-gray-600 mb-6">
+            Please start Strapi server at:{" "}
+            <code className="bg-gray-100 px-2 py-1 rounded">{API_URL}</code>
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-gradient-to-r from-[#00ADE7] to-[#305292] text-white rounded-full font-semibold hover:opacity-90 transition-all hover:scale-105 shadow-lg"
+          >
+            🔄 Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-100">
@@ -33,7 +125,7 @@ const Products = () => {
 
         <div className="container mx-auto px-4 py-16 lg:py-24 relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-            {/* LEFT SIDE: CAMERA IMAGE */}
+            {/* LEFT SIDE: CAMERA IMAGE - USING YOUR ORIGINAL LOCAL IMAGE */}
             <motion.div
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -77,389 +169,80 @@ const Products = () => {
         </div>
       </div>
 
-      {/* ================= PRODUCTS GRID ================= */}
+      {/* ================= PRODUCTS GRID - FROM STRAPI ================= */}
       <div className="relative z-2 -mt-20 sm:-mt-32 lg:-mt-44 lg:p-20 md:p-10 p-5">
         <div className="grid lg:grid-cols-4 grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 p-5 bg-white lg:p-20 rounded-2xl shadow-xl">
-          {/* Bullet Cameras */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            // ✅ Your current approach (RECOMMENDED for fixed categories):
-            onClick={() => navigate(`/products/bullet-cameras`)}
-            // ✅ OR dynamic with slugify (optional):
-            // onClick={() => navigate(`/products/${slugify('Bullet Cameras')}`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={bullet1}
-                  alt="Bullet Camera"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Bullet Cameras
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Long-range clarity for outdoor security.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+          {categories.map((category, index) => {
+            const imageUrl = category.image?.url
+              ? `${API_URL}${category.image.url}`
+              : PLACEHOLDER_IMAGE;
 
-          {/* Dome Cameras */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/dome-cameras`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={dom1}
-                  alt="Dome Camera"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Dome Cameras
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Discrete indoor surveillance with wide coverage.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            return (
+              <motion.div
+                key={category.id || category.documentId}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+              >
+                {/* ✅ UNIFORM CARD SIZE - All cards same height */}
+                <div
+                  className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group h-full flex flex-col"
+                  onClick={() => navigate(`/products/${category.slug}`)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+                  {/* Icon Container - Fixed Size for All Cards */}
+                  <div className="flex justify-center items-center mb-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
+                      <img
+                        className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                        src={imageUrl}
+                        alt={category.name}
+                        onError={(e) => {
+                          e.target.src = PLACEHOLDER_IMAGE;
+                        }}
+                      />
+                    </div>
+                  </div>
 
-          {/* Eyeball Cameras */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/eyeball-cameras`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={eyeball1}
-                  alt="Eyeball Camera"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Eyeball Cameras
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Flexible angle coverage; reliable visual monitoring.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+                  {/* Content Container - Flex to fill remaining space */}
+                  <div className="text-center flex-1 flex flex-col justify-between">
+                    <div>
+                      {/* Category Name - From Strapi */}
+                      <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors min-h-[1.25rem]">
+                        {category.name}
+                      </h3>
 
-          {/* PTZ Cameras */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/ptz-cameras`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={ptz1}
-                  alt="PTZ Camera"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                PTZ Cameras
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                360° pan-tilt-zoom for full surveillance.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+                      {/* Category Description - From Strapi */}
+                      {category.description && (
+                        <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed min-h-[2.5rem] line-clamp-2">
+                          {category.description}
+                        </p>
+                      )}
+                    </div>
 
-          {/* Server */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/server`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={server1}
-                  alt="Server"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Server
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Central backend processing and data storage.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Hybrid Video Recorder */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/smart-gpu-with-ai-camera`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={adnvr1}
-                  alt="Hybrid Video Recorder"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Hybrid Video Recorder
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Mixed analog/IP recording for flexible systems.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Trinai Facial Biostand */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/ai-based-face-recognition`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={face1}
-                  alt="Trinai Facial Biostand"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Trinai Facial Biostand
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Smart identity detection for secure access.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Display */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group"
-            onClick={() => navigate(`/products/display`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={display2}
-                  alt="Display"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Display
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                High-definition screens for live monitoring and control.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Network Video Recorder */}
-          <div
-            className="shadow-lg hover:shadow-2xl hover:scale-105 p-6 cursor-pointer transition-all duration-300 rounded-xl bg-gradient-to-br from-gray-50 to-white group col-span-2 lg:col-span-1"
-            onClick={() => navigate(`/products/network-video-recorder`)}
-          >
-            <div className="flex justify-center items-center mb-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-gradient-to-br from-[#00ADE7]/10 to-[#305292]/10 group-hover:scale-110 transition-transform duration-300">
-                <img
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                  src={nvr1}
-                  alt="Network Video Recorder"
-                />
-              </div>
-            </div>
-            <div className="text-center">
-              <h3 className="text-gray-700 font-semibold text-sm sm:text-base group-hover:text-[#00ADE7] transition-colors">
-                Network Video Recorder
-              </h3>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 leading-relaxed">
-                Securely record and store surveillance footage.
-              </p>
-              <div className="mt-4 flex justify-center items-center gap-1.5">
-                <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
-                  View More
-                </span>
-                <svg
-                  className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+                    {/* View More Button - HARDCODED (Not from Strapi) */}
+                    <div className="mt-4 flex justify-center items-center gap-1.5">
+                      <span className="text-[#00ADE7] font-medium text-xs sm:text-sm group-hover:underline transition-all">
+                        View More
+                      </span>
+                      <svg
+                        className="w-4 h-4 text-[#00ADE7] transform group-hover:translate-x-1 transition-transform duration-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
