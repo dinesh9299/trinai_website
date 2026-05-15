@@ -319,6 +319,11 @@ function PrivacyPolicy() {
                       of mobile Internet browser You use, unique device
                       identifiers and other diagnostic data.
                     </p>
+                    <p>
+                      We may also collect information that Your browser sends
+                      whenever You visit our Service or when You access the
+                      Service by or through a mobile device.
+                    </p>
                   </div>
                 </div>
 
@@ -361,6 +366,47 @@ function PrivacyPolicy() {
                         email and for other related website statistics (for
                         example, recording the popularity of a certain section
                         and verifying system and server integrity).
+                      </p>
+                    </div>
+                    {/* Cookie Types */}
+                    <div className="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-6">
+                      <p className="text-gray-700 leading-relaxed text-sm">
+                        Cookies can be <strong>"Persistent"</strong> or{" "}
+                        <strong>"Session"</strong> Cookies. Persistent Cookies
+                        remain on Your personal computer or mobile device when
+                        You go offline, while Session Cookies are deleted as
+                        soon as You close Your web browser.You can learn more
+                        about cookies on <u>Terms Feed website</u> article.
+                      </p>
+
+                      <p className="text-gray-700 leading-relaxed text-sm mt-4">
+                        We use both Session and Persistent Cookies for the
+                        purposes set out below:
+                      </p>
+                    </div>
+
+                    {/* Necessary Cookies */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 shadow-sm">
+                      <h5 className="font-semibold text-gray-900 mb-3 text-base">
+                        Necessary / Essential Cookies
+                      </h5>
+
+                      <p className="text-gray-700 text-sm mb-2">
+                        <strong>Type:</strong> Session Cookies
+                      </p>
+
+                      <p className="text-gray-700 text-sm mb-2">
+                        <strong>Administered by:</strong> Us
+                      </p>
+
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        <strong>Purpose:</strong> These Cookies are essential to
+                        provide You with services available through the Website
+                        and to enable You to use some of its features. They help
+                        to authenticate users and prevent fraudulent use of user
+                        accounts. Without these Cookies, the services that You
+                        have asked for cannot be provided, and We only use these
+                        Cookies to provide You with those services.
                       </p>
                     </div>
                   </div>
@@ -444,7 +490,7 @@ function PrivacyPolicy() {
                   {
                     title: "To provide You",
                     description:
-                      "with news, special offers and general information about other goods, services and events which we offer that are similar to those that you have already purchased or enquired about unless You have opted not to receive such information.",
+                      "with news, special offers and general information about other goods, services and events which we offer that are similar to those that you have already purchased or enquired about unless You have opted not to receive such information.se Your information for other purposes, such as data analysis, identifying usage trends, determining the effectiveness of our promotional campaigns and to evaluate and improve our Service, products, services, marketing and your experience.",
                   },
                 ].map((purpose, index) => (
                   <div

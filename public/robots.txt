@@ -1,0 +1,20 @@
+# https://www.trinai.in/robots.txt
+
+User-agent: *
+Allow: /
+
+# Allow all important pages
+Allow: /products/
+Allow: /about
+Allow: /solutions
+Allow: /contact
+Allow: /security/
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /uploads/private/
+
+# Sitemap location
+Sitemap: https://www.trinai.in/sitemap.xml

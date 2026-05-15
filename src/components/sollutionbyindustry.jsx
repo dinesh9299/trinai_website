@@ -1,5 +1,71 @@
 export const solutionsByIndustry = [
   {
+    industry: "Transport",
+    image:
+      "https://img.freepik.com/premium-photo/3d-rendering-security-camera-cctv-camera-ceiling_493806-5473.jpg",
+    description:
+      "It is a next-generation, centralized video management system tailored for modern surveillance needs. Designed for scalability, interoperability, and ease of use, it empowers institutions and enterprises to monitor, manage, and secure their environments with complete confidence.",
+    solutions: [
+      {
+        name: "School campus surveillance",
+        image:
+          "https://img.freepik.com/free-photo/cctv-camera-school-building_23-2149019847.jpg",
+        description: "Monitor classrooms, corridors, and playgrounds.",
+      },
+      {
+        name: "Student attendance tracking",
+        image:
+          "https://img.freepik.com/free-photo/big-brother-colage-concept_23-2149624980.jpg",
+        description: "Automate attendance through facial recognition.",
+      },
+      {
+        name: "Bus security cameras",
+        image:
+          "https://img.freepik.com/premium-photo/low-angle-view-building-against-sky_1048944-6255509.jpg",
+        description: "Ensure student safety during transportation.",
+      },
+      {
+        name: "Exam hall monitoring",
+        image:
+          "https://img.freepik.com/premium-photo/close-up-electric-lamp-table-building_1048944-2555680.jpg",
+        description: "Prevent cheating and ensure fair examinations.",
+      },
+    ],
+  },
+  {
+    industry: "Trinai VMS",
+    image:
+      "https://img.freepik.com/premium-photo/3d-rendering-security-camera-cctv-camera-ceiling_493806-5473.jpg",
+    description:
+      "It is a next-generation, centralized video management system tailored for modern surveillance needs. Designed for scalability, interoperability, and ease of use, it empowers institutions and enterprises to monitor, manage, and secure their environments with complete confidence.",
+    solutions: [
+      {
+        name: "School campus surveillance",
+        image:
+          "https://img.freepik.com/free-photo/cctv-camera-school-building_23-2149019847.jpg",
+        description: "Monitor classrooms, corridors, and playgrounds.",
+      },
+      {
+        name: "Student attendance tracking",
+        image:
+          "https://img.freepik.com/free-photo/big-brother-colage-concept_23-2149624980.jpg",
+        description: "Automate attendance through facial recognition.",
+      },
+      {
+        name: "Bus security cameras",
+        image:
+          "https://img.freepik.com/premium-photo/low-angle-view-building-against-sky_1048944-6255509.jpg",
+        description: "Ensure student safety during transportation.",
+      },
+      {
+        name: "Exam hall monitoring",
+        image:
+          "https://img.freepik.com/premium-photo/close-up-electric-lamp-table-building_1048944-2555680.jpg",
+        description: "Prevent cheating and ensure fair examinations.",
+      },
+    ],
+  },
+  {
     industry: "Residential Security",
     image:
       "https://img.freepik.com/free-photo/surveillance-camera-built-into-stone-wall-building_93675-131321.jpg",
@@ -146,79 +212,13 @@ export const solutionsByIndustry = [
       {
         name: "School campus surveillance",
         image:
-          "https://img.freepik.com/free-photo/cctv-camera-school-building_23-2149019847.jpg",
+          "https://ik.imagekit.io/e7pijyscb/Trinai%20home%20banner/About%20Page/1.png",
         description: "Monitor classrooms, corridors, and playgrounds.",
       },
       {
         name: "Student attendance tracking",
         image:
-          "https://img.freepik.com/free-photo/big-brother-colage-concept_23-2149624980.jpg",
-        description: "Automate attendance through facial recognition.",
-      },
-      {
-        name: "Bus security cameras",
-        image:
-          "https://img.freepik.com/premium-photo/low-angle-view-building-against-sky_1048944-6255509.jpg",
-        description: "Ensure student safety during transportation.",
-      },
-      {
-        name: "Exam hall monitoring",
-        image:
-          "https://img.freepik.com/premium-photo/close-up-electric-lamp-table-building_1048944-2555680.jpg",
-        description: "Prevent cheating and ensure fair examinations.",
-      },
-    ],
-  },
-  {
-    industry: "Trinai VMS",
-    image:
-      "https://img.freepik.com/premium-photo/3d-rendering-security-camera-cctv-camera-ceiling_493806-5473.jpg",
-    description:
-      "It is a next-generation, centralized video management system tailored for modern surveillance needs. Designed for scalability, interoperability, and ease of use, it empowers institutions and enterprises to monitor, manage, and secure their environments with complete confidence.",
-    solutions: [
-      {
-        name: "School campus surveillance",
-        image:
-          "https://img.freepik.com/free-photo/cctv-camera-school-building_23-2149019847.jpg",
-        description: "Monitor classrooms, corridors, and playgrounds.",
-      },
-      {
-        name: "Student attendance tracking",
-        image:
-          "https://img.freepik.com/free-photo/big-brother-colage-concept_23-2149624980.jpg",
-        description: "Automate attendance through facial recognition.",
-      },
-      {
-        name: "Bus security cameras",
-        image:
-          "https://img.freepik.com/premium-photo/low-angle-view-building-against-sky_1048944-6255509.jpg",
-        description: "Ensure student safety during transportation.",
-      },
-      {
-        name: "Exam hall monitoring",
-        image:
-          "https://img.freepik.com/premium-photo/close-up-electric-lamp-table-building_1048944-2555680.jpg",
-        description: "Prevent cheating and ensure fair examinations.",
-      },
-    ],
-  },
-  {
-    industry: "Transport",
-    image:
-      "https://img.freepik.com/premium-photo/3d-rendering-security-camera-cctv-camera-ceiling_493806-5473.jpg",
-    description:
-      "It is a next-generation, centralized video management system tailored for modern surveillance needs. Designed for scalability, interoperability, and ease of use, it empowers institutions and enterprises to monitor, manage, and secure their environments with complete confidence.",
-    solutions: [
-      {
-        name: "School campus surveillance",
-        image:
-          "https://img.freepik.com/free-photo/cctv-camera-school-building_23-2149019847.jpg",
-        description: "Monitor classrooms, corridors, and playgrounds.",
-      },
-      {
-        name: "Student attendance tracking",
-        image:
-          "https://img.freepik.com/free-photo/big-brother-colage-concept_23-2149624980.jpg",
+          "https://ik.imagekit.io/e7pijyscb/Trinai%20home%20banner/About%20Page/2.png",
         description: "Automate attendance through facial recognition.",
       },
       {

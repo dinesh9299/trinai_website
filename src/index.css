@@ -2,12 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* @import "./fonts/fonts.css"; */
-
+/* Hide Scrollbar */
 .hide-scrollbar::-webkit-scrollbar {
   display: none !important;
 }
 .hide-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ===== GLOBAL APPLE SYSTEM (SF PRO) TYPOGRAPHY ===== */
+@layer base {
+  html,
+  body {
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "SF Pro Text",
+      "SF Pro Display",
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 }

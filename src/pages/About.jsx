@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// src/pages/About.jsx - PRODUCTION READY (FIXED NAVIGATION)
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Image, Button, ConfigProvider, Carousel, Row, Col } from "antd";
 import { ArrowRightOutlined } from "@ant-design/icons";
@@ -8,74 +9,173 @@ import { BsPcDisplay } from "react-icons/bs";
 import { SlCamrecorder } from "react-icons/sl";
 import { LuRouter } from "react-icons/lu";
 import { TiTick } from "react-icons/ti";
-import makeinindia from "../images/india/image (8).jpg";
-import workflow from "../images/india/image.jpg";
-import workflow2 from "../images/india/image (2).jpg";
-import workflow3 from "../images/india/image (4).jpg";
-import image1 from "../images/india/image (10).jpg";
-import image2 from "../images/india/image (11).jpg";
-import image3 from "../images/india/image (12).jpg";
-import banner from "../images/cctv1.jpg";
-
 import { motion } from "framer-motion";
 import { ScrollTop } from "primereact/scrolltop";
+import WhyChooseUs from "../components/who_we_are";
+
+// API Configuration
+const API_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
+
+// Helper function to get media URL from Strapi
+const getMediaUrl = (media) => {
+  if (!media) return null;
+  const mediaItem = media?.data || media;
+  if (!mediaItem?.url) return null;
+  return mediaItem.url.startsWith("http")
+    ? mediaItem.url
+    : `${API_URL}${mediaItem.url}`;
+};
+
+// Helper to parse rich text from Strapi
+const parseRichText = (richText) => {
+  if (!richText || !Array.isArray(richText)) return "";
+  return richText
+    .filter((block) => block.type === "paragraph")
+    .map((block) => {
+      const text = block.children
+        .filter((child) => child.type === "text")
+        .map((child) => child.text)
+        .join("");
+      return text.trim();
+    })
+    .filter((text) => text.length > 0)
+    .join("\n\n");
+};
+
+// Icon mapping for features carousel
+const featureIconMap = {
+  GiCctvCamera: <GiCctvCamera size={40} />,
+  LuRouter: <LuRouter size={40} />,
+  BsHddNetworkFill: <BsHddNetworkFill size={40} />,
+  BsPcDisplay: <BsPcDisplay size={40} />,
+};
 
 const About = () => {
-  // const { styles } = useStyle();
-  const [selectedImage, setSelectedImage] = useState(null);
+  const carouselRef = useRef(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const [aboutData, setAboutData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 🔥 FETCH ABOUT PAGE DATA FROM STRAPI
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    const fetchAboutData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${API_URL}/api/about-page?populate=*`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("✅ About Data from Strapi:", data.data);
+        setAboutData(data.data);
+      } catch (err) {
+        console.error("❌ Error fetching about data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAboutData();
   }, []);
-  const features = [
-    {
-      picture:
-        "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fhd-camera_1731581599675_cf3898084427.png&w=96&q=75",
-      heading: "HD Camera",
-      description:
-        "A high-definition surveillance camera provides crystal-clear video for enhanced security monitoring.",
-      icon: <GiCctvCamera size={40} />,
-    },
-    {
-      picture:
-        "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fwifi-smart_1731581622608_3f0dc5045a9e.png&w=96&q=75",
-      heading: "WiFi Smart",
-      description:
-        "Smart WiFi-enabled security system with mobile integration for remote monitoring and control.",
-      icon: <LuRouter size={40} />,
-    },
-    {
-      picture:
-        "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Finteractive-display_1731581646212_8facec83168a.png&w=96&q=75",
-      heading: "Network Switches",
-      description:
-        "Efficient network switches optimizing connectivity for large-scale security system deployments.",
-      icon: <BsHddNetworkFill size={40} />,
-    },
-    {
-      picture:
-        "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fvideo-recorder_1731581653628_74d3cc9237f5.png&w=96&q=75",
-      heading: "Interactive Display",
-      description:
-        "Touch-enabled display with real-time interaction, ideal for control and security monitoring systems.",
-      icon: <BsPcDisplay size={40} />,
-    },
-    {
-      picture:
-        "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fvideo-recorder_1731581653628_74d3cc9237f5.png&w=96&q=75",
-      heading: "Video Recorder",
-      description:
-        "Cloud-based storage solutions for secure and scalable video archiving.",
-      icon: <SlCamrecorder size={40} />,
-    },
-    {
-      picture:
-        "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fwifi-router_1731581662021_324c72ef6e8a.png&w=96&q=75",
-      heading: "WiFi Router",
-      description:
-        "Seamless integration with smart home automation systems for better security management.",
-      icon: <LuRouter size={40} />,
-    },
-  ];
+
+  // 🔴 LOADING STATE
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white pt-20">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#00ADE7] border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // 🔴 ERROR STATE
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white pt-20">
+        <div className="text-center text-red-600">
+          <p className="text-xl font-bold mb-2">Error Loading Content</p>
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-[#00ADE7] text-white rounded-lg hover:opacity-90"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback data if Strapi returns empty
+  const fallbackData = {
+    banner_images: [],
+    make_in_india_title: "Make in India",
+    make_in_india_heading: "Indian Innovation. Global Impact.",
+    make_in_india_description: [],
+    make_in_india_image: null,
+    vision_title: "Vision",
+    vision_content:
+      "To be a global leader in surveillance and security solutions, made in India for the world.",
+    mission_title: "Mission",
+    missionitems: [
+      { text: "Build OEM / ODM global partnerships" },
+      { text: "Manufacture 2M+ units in India" },
+      { text: "Deliver scalable & affordable solutions" },
+      { text: "Empower Indian technology & jobs" },
+    ],
+    security_heading: "Advanced Security and Surveillance Solutions",
+    trinai_card_title: "Trinai Industries",
+    trinai_card_heading: "Innovative Security Solutions by Trinai",
+    trinai_card_badge_text: "100% Make in India",
+    trinai_card_badge_subtext: "Trusted Nationwide",
+    tinaicardimage: null,
+    advancedsecuritytext1: "",
+    surveillanceheadding1: "Intelligent Surveillance Solutions",
+    surveillanceheadding2:
+      "Six pillars that differentiate TRINAI from the rest",
+    serveillancepart: [],
+    welcome_title: "Welcome to Trinai",
+    welcome_description:
+      "We are leaders in advanced surveillance solutions, ensuring security and peace of mind.",
+    welcome_image: null,
+    welcome_page_products: [],
+    welcome_cta_text: "View Products",
+    welcome_cta_link: "/products", // ✅ FIXED: Changed from "/viewproducts" to "/products"
+    features_carousel: [],
+    manufacturing_title: "In House Manufacturing",
+    manufacturing_description:
+      "Our CCTV cameras are meticulously crafted through in-house manufacturing with an eye for detail by the best engineers, enabling complete control over quality, innovation, and precision.",
+    manufacturing_image: null,
+  };
+
+  // Merge Strapi data with fallbacks
+  const data = { ...fallbackData, ...aboutData };
+
+  // Parse rich text description
+  const makeInIndiaDescription = parseRichText(data.make_in_india_description);
+
+  // Prepare features for carousel
+  const features = (data.features_carousel || []).map((item) => ({
+    picture: null,
+    heading: item.heading,
+    description: item.description,
+    icon: item.icon_name ? (
+      featureIconMap[item.icon_name]
+    ) : (
+      <GiCctvCamera size={40} />
+    ),
+  }));
 
   const chunkArray = (arr, size) => {
     return arr.reduce((acc, _, i) => {
@@ -86,423 +186,310 @@ const About = () => {
 
   const groupedFeatures = chunkArray(features, 4);
 
-  const contentStyle = {
-    height: "150px",
-    color: "#000000",
-    fontWeight: "bold",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#D5E5D5",
-    fontSize: "16px",
-    padding: "20px",
-    borderRadius: "10px",
-    textAlign: "center",
-  };
-
-  const images = [
-    {
-      src: "https://assets.agentfire3.com/uploads/sites/860/2023/02/The-top-5-Smart-Home-Security-Systems.jpg",
-      label: "Smart Home Security",
-    },
-    {
-      src: "https://lh3.googleusercontent.com/hMocN5AmKXj8bZF96zINiX8hfZRW-fcsEe0cMHP1ir6cogNe4sbzYspw0WweNm7w7ZWwtdwicDoxZmxoswA-GLMnYOfJQneYSQ=w3840-h2160-c-rw-v3",
-      label: "Smart Home Security - II",
-    },
-    {
-      src: "https://i0.wp.com/alarmsys.com/wp-content/uploads/2024/01/Blog-9.png?fit=1024%2C576&ssl=1",
-      label: "24/7 Alarm Monitoring",
-    },
-    {
-      src: "https://m.media-amazon.com/images/I/51j3Z1fkUOL._AC_UF1000,1000_QL80_.jpg",
-      label: "Doorbell Video Cameras",
-    },
-  ];
-
-  const services = [
-    "Smart Home Security",
-    "Doorbell Video Cameras",
-    "Smart Home Security - II",
-    "24/7 Alarm Monitoring",
-  ];
+  // Banner images - DIRECT from Strapi array
+  const bannerImages = (data.banner_images || []).map((img) =>
+    getMediaUrl(img),
+  );
 
   return (
-    <div className="w-full bg-white text-black">
-      {/* Banner Section */}
-      <div className="w-full">
-        <img
-          src={banner}
-          alt="Banner"
-          className="w-full h-[250px] md:h-[500px] lg:h-[400px] object-cover"
-        />
+    <div className="w-full bg-white text-black pt-20">
+      {/* Banner Section - FROM STRAPI */}
+      {bannerImages.length > 0 ? (
+        <div
+          className="w-full relative overflow-hidden group"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 z-10 pointer-events-none" />
+
+          <Carousel
+            ref={carouselRef}
+            autoplay={!isHovering}
+            autoplaySpeed={data.banner_autoplay_speed || 2000}
+            infinite
+            dots={false}
+            beforeChange={(_, next) => setActiveSlide(next)}
+            adaptiveHeight
+            swipeToSlide
+            draggable={false}
+          >
+            {bannerImages.map((img, index) => (
+              <div key={index} className="w-full">
+                <motion.img
+                  src={img}
+                  alt={`About Slide ${index + 1}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.8 }}
+                  className="w-full h-auto block select-none"
+                  draggable={false}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+              </div>
+            ))}
+          </Carousel>
+
+          {/* Indicator Dots */}
+          <div className="absolute bottom-6 left-0 w-full z-20 px-4">
+            <div className="flex justify-center items-center gap-3">
+              {bannerImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => carouselRef.current?.goTo(index)}
+                  className={`relative transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00ADE7] focus:ring-offset-2 focus:ring-offset-black/50 rounded-full ${
+                    activeSlide === index
+                      ? "w-10 h-1.5 bg-[#00ADE7] shadow-lg shadow-[#00ADE7]/50"
+                      : "w-2.5 h-2.5 bg-white/90 hover:bg-white hover:scale-125 shadow-lg shadow-black/30"
+                  }`}
+                >
+                  {activeSlide === index && (
+                    <span className="absolute inset-0 rounded-full bg-[#00ADE7] animate-ping opacity-40" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+          <p className="text-gray-500">Banner images not loaded from Strapi</p>
+        </div>
+      )}
+
+      {/* MAKE IN INDIA SECTION - FROM STRAPI */}
+      <div className="p-5">
+        <div className="lg:grid grid-cols-2 gap-10 border rounded-xl shadow-md p-8 items-center">
+          <motion.div
+            initial={{ x: -120, opacity: 0 }}
+            whileInView={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: false }}
+            className="flex justify-center"
+          >
+            <img
+              src={
+                getMediaUrl(data.make_in_india_image) ||
+                "https://via.placeholder.com/400x300?text=Make+in+India"
+              }
+              alt="Make in India - Trinai"
+              loading="lazy"
+              className="rounded-xl max-w-md w-full"
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ x: 120, opacity: 0 }}
+            whileInView={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: false }}
+          >
+            <div className="text-xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
+              {data.make_in_india_title}
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              {data.make_in_india_heading}
+            </h2>
+
+            <div className="text-gray-600 text-lg leading-relaxed mb-4 space-y-4">
+              {makeInIndiaDescription.split("\n\n").map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+
+            {/* Vision & Mission - FROM STRAPI */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="group rounded-xl p-[2px] transition-all duration-300 hover:bg-gradient-to-r hover:from-[#00ADE7] hover:to-[#305292] hover:-translate-y-1">
+                <div className="bg-white rounded-xl p-5 h-full transition-all duration-300 group-hover:shadow-xl">
+                  <h3 className="font-bold text-gray-800 mb-2 text-lg">
+                    {data.vision_title}
+                  </h3>
+                  <p className="text-gray-600">{data.vision_content}</p>
+                </div>
+              </div>
+              <div className="group rounded-xl p-[2px] transition-all duration-300 hover:bg-gradient-to-r hover:from-[#00ADE7] hover:to-[#305292] hover:-translate-y-1">
+                <div className="bg-white rounded-xl p-5 h-full transition-all duration-300 group-hover:shadow-xl">
+                  <h3 className="font-bold text-gray-800 mb-2 text-lg">
+                    {data.mission_title}
+                  </h3>
+                  <ul className="text-gray-600 space-y-1 list-disc list-inside">
+                    {(data.missionitems || []).map((item, index) => (
+                      <li key={index}>{item.text}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
+      {/* WHY CHOOSE US */}
+      <WhyChooseUs />
+
+      {/* SECURITY HEADING - FROM STRAPI */}
       <motion.div
-        initial={{ y: 50, opacity: 0 }}
+        initial={{ y: 30, opacity: 0 }}
         whileInView={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        className=" flex justify-center text-gray-500 items-center font-thin text-3xl p-3 font-bold "
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+        className="text-center mb-4 lg:mb-6 px-4"
       >
-        TRINAI is a comprehensive surveillance ecosystem that integrates:
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight">
+          {data.security_heading}
+        </h2>
       </motion.div>
 
-      {/* <div className="lg:p-10"> */}
-      {/* <div className="p-5">
-          <div
-            className="lg:grid border shadow shadow-whit10
-                
-                   rounded-md grid-cols-2 p-8 "
-          >
-            <div className=" lg:px-20">
-              <motion.div
-                initial={{ x: -200, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <img className=" rounded-md" src={makeinindia}></img>
-              </motion.div>
-            </div>
+      {/* TRINAI INDUSTRIES CARD - FROM STRAPI */}
+      <div className="lg:p-6">
+        <div className="py-4 px-5">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+            {/* LEFT IMAGE - FROM STRAPI */}
             <motion.div
-              initial={{ x: 200, opacity: 0 }}
+              initial={{ x: -80, opacity: 0 }}
               whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              viewport={{ once: true }}
+              className="flex justify-center"
             >
-              <div className="text-orange-600 text-xl font-bold my-2 ms-1">
-                Make In INDIA
-              </div>
-              <div className=" text-gray-500 font-serif font-bold text-2xl m-2 ">
-                Innovative Security and Data Solutions by Trinai
-              </div>
-
-              <div className=" text-start mx-2 mt-5 text-gray-500 text-xl">
-                <p>
-                  ✅ 100% Make in India – Designed, developed, and manufactured
-                  locally.
-                </p>
-                <p>
-                  ✅ AI & IoT-Powered Security – Smart automation for efficient
-                  surveillance.
-                </p>
-                <p>
-                  ✅ No Import Dependency – Faster service, lower costs, and
-                  reliable performance.
-                </p>
-                <p>
-                  ✅ Customizable & Scalable – Flexible to adapt to unique
-                  security needs.
-                </p>
-                <p>
-                  ✅ Industry-Leading Performance – A blend of AI, IoT, and
-                  next-gen surveillance technology.
-                </p>
-              </div>
-              <div className=" mt-20  grid grid-cols-2 gap-7">
-                <div className=" flex">
-                  <div>
-                    <TiTick color="" className=" text-orange-600" size={25} />
+              <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
+                <div className="relative p-[3px] rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#00ADE7] to-[#305292] shadow-2xl">
+                  <div className="rounded-2xl sm:rounded-3xl overflow-hidden bg-white">
+                    <img
+                      src={
+                        getMediaUrl(data.tinaicardimage) ||
+                        "https://via.placeholder.com/400x300?text=Trinai+Industries"
+                      }
+                      alt="Innovative Security Solutions by Trinai"
+                      className="w-full h-auto max-h-[240px] sm:max-h-[280px] lg:max-h-[320px] object-contain p-3 sm:p-4 transition-transform duration-700 hover:scale-105"
+                      loading="lazy"
+                    />
                   </div>
-                  <div className="text-gray-500">Expertise</div>
                 </div>
-                <div className=" flex">
-                  <div>
-                    <TiTick color="" className=" text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">Innovation</div>
-                </div>
-                <div className=" flex">
-                  <div>
-                    <TiTick color="" className=" text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">Dependability</div>
-                </div>
-                <div className=" flex">
-                  <div>
-                    <TiTick color="" className=" text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">Customer-Centric</div>
+                <div className="absolute -bottom-3 -left-3 sm:-bottom-4 sm:-left-4 bg-white shadow-xl rounded-xl sm:rounded-2xl px-4 py-2 sm:px-5 sm:py-3 hidden md:block z-10">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700">
+                    {data.trinai_card_badge_text}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-400">
+                    {data.trinai_card_badge_subtext}
+                  </p>
                 </div>
               </div>
             </motion.div>
-          </div>
-        </div> */}
 
-      {/* <div className=" p-5 "></div> */}
-
-      {/* <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className=" flex justify-center text-gray-500 items-center font-thin text-3xl p-3 font-bold "
-        >
-          ADVANCED SECURITY AND SURVEILLANCE SOLUTIONS
-        </motion.div> */}
-      {/* </div> */}
-
-      <div className="lg:p-10">
-        <div className="p-5">
-          <div
-            className="lg:grid border shadow shadow-whit10
-                
-                   rounded-md grid-cols-2 p-8 "
-          >
-            <div className=" lg:px-20">
-              <motion.div
-                initial={{ x: -200, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <div className=" space-y-4 grid grid-cols-2 space-x-4">
-                  {" "}
-                  <img className=" rounded-md " src={workflow}></img>
-                  <img className=" rounded-md" src={workflow3}></img>
-                  <img className=" rounded-md" src={workflow2}></img>
-                </div>
-              </motion.div>
-            </div>
+            {/* RIGHT CONTENT - FROM STRAPI */}
             <motion.div
-              initial={{ x: 200, opacity: 0 }}
+              initial={{ x: 80, opacity: 0 }}
               whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              viewport={{ once: true }}
             >
-              <div className="text-orange-600 text-xl font-bold my-2 ms-1">
-                Trinai Industries
+              <svg width="0" height="0">
+                <defs>
+                  <linearGradient
+                    id="tickGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
+                    <stop offset="0%" stopColor="#00ADE7" />
+                    <stop offset="100%" stopColor="#305292" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold tracking-wider bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-3 sm:mb-4">
+                {data.trinai_card_title}
               </div>
-              <div className=" text-gray-500 font-serif font-bold text-2xl m-2 ">
-                Innovative Security and Data Solutions by Trinai
-              </div>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 leading-tight">
+                {data.trinai_card_heading}
+              </h3>
 
-              <div className=" text-start mx-2 mt-5 text-gray-500 text-xl">
-                {/* <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    100% Make in India – Designed, developed, and manufactured
-                    locally.
-                  </div>
-                </div> */}
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    AI & IoT-Powered Security – Smart automation for efficient
-                    surveillance.
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    No Import Dependency – Faster service, lower costs, and
-                    reliable performance.
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    Customizable & Scalable – Flexible to adapt to unique
-                    security needs.
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    Industry-Leading Performance – A blend of AI, IoT, and
-                    next-gen surveillance technology.
-                  </div>
-                </div>
+              <div className="mt-6 space-y-5 text-gray-600 text-base sm:text-lg">
+                {data.advancedsecuritytext1.split("\n\n").map((text, index) => {
+                  const parts = text.split(" – ");
+                  if (parts.length === 2) {
+                    return (
+                      <div key={index} className="flex items-start gap-4 group">
+                        <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-gradient-to-br from-[#00ADE7]/15 to-[#305292]/15 group-hover:scale-110 transition-transform duration-300">
+                          <TiTick
+                            size={18}
+                            style={{ fill: "url(#tickGradient)" }}
+                          />
+                        </div>
+                        <p>
+                          <span className="font-semibold text-gray-800">
+                            {parts[0]} –
+                          </span>{" "}
+                          {parts[1]}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
               </div>
             </motion.div>
           </div>
         </div>
-
-        <div className=" p-5 "></div>
-
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className=" flex justify-center text-gray-500 items-center font-thin text-3xl p-3 font-bold "
-        >
-          ADVANCED SECURITY AND SURVEILLANCE SOLUTIONS
-        </motion.div>
       </div>
 
-      <div className="lg:p-10">
-        <div className="p-5">
-          <div
-            className="lg:grid border shadow shadow-whit10
-                
-                   rounded-md grid-cols-2 p-8 space-y-4 "
-          >
-            <div className=" lg:px-20">
-              <motion.div
-                initial={{ x: -200, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <img className=" rounded-md" src={image1}></img>
-              </motion.div>
-            </div>
-            <div className=" lg:px-20">
-              <motion.div
-                initial={{ x: -200, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <img className=" rounded-md" src={image2}></img>
-              </motion.div>
-            </div>
-            <div className=" lg:px-20">
-              <motion.div
-                initial={{ x: -200, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <img className=" rounded-md" src={image3}></img>
-              </motion.div>
-            </div>
-            <motion.div
-              initial={{ x: 200, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-            >
-              <div className="text-orange-600 text-xl font-bold my-2 ms-1">
-                Why Choose Trinai?
-              </div>
-              <div className=" text-gray-500 font-serif font-bold text-2xl m-2 ">
-                Innovative Security and Data Solutions by Trinai
-              </div>
-
-              <div className=" text-start mx-2 mt-5 text-gray-500 text-xl">
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    TRINAI is a comprehensive surveillance ecosystem that
-                    integrates
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    Cloud & On-Premise Storage – Securely store footage with
-                    flexible storage options.
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    {" "}
-                    Remote Access & Control – Monitor live feeds from anywhere,
-                    anytime using web & mobile apps.
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    {" "}
-                    Smart Integration – Connect with IoT devices, alarms, and
-                    security systems for an automated experience.
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div>
-                    <TiTick color="" className="text-orange-600" size={25} />
-                  </div>
-                  <div className="text-gray-500">
-                    Industry-Leading Performance – A blend of AI, IoT, and
-                    next-gen surveillance technology.
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+      {/* WELCOME TO TRINAI - FROM STRAPI */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 max-w-7xl mx-auto">
+        <div className="flex justify-center items-center">
+          <div className="w-full max-w-md md:max-w-lg rounded-2xl overflow-hidden">
+            <img
+              src={
+                getMediaUrl(data.welcome_image) ||
+                "https://via.placeholder.com/400x300?text=Welcome+to+Trinai"
+              }
+              alt="Trinai Security"
+              className="w-full h-auto object-cover"
+              loading="lazy"
+            />
           </div>
         </div>
 
-        <div className=" p-5 "></div>
-
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className=" flex justify-center text-gray-500 items-center font-thin text-3xl p-3 font-bold "
-        >
-          Cutting-Edge Security & Intelligent Surveillance Solutions
-        </motion.div>
-      </div>
-
-      {/* Main Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
-        {/* Left: Images Section */}
-        <div className="flex flex-wrap gap-4 justify-center">
-          {images.map((image, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer w-32 md:w-48"
-              onClick={() => setSelectedImage(image.src)}
-            >
-              <Image
-                src={image.src}
-                alt={image.label}
-                className="w-full h-20 object-cover"
-              />
-              <div className="p-2 text-center">
-                <p className="text-sm font-semibold">{image.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Right: Content Section */}
-        <div className="p-6 flex flex-col justify-center text-center md:text-left">
-          <h1 className="text-4xl md:text-6xl font-bold">Welcome to Trinai</h1>
-          <p className="text-lg md:text-xl leading-relaxed mt-4">
-            We are leaders in advanced surveillance solutions, ensuring security
-            and peace of mind.
+        <div className="p-3 md:p-4 flex flex-col justify-center text-center md:text-left max-w-lg">
+          <h1 className="text-2xl md:text-4xl font-bold">
+            {data.welcome_title}
+          </h1>
+          <p className="text-sm md:text-base leading-relaxed mt-3">
+            {data.welcome_description}
           </p>
-          <div className="mt-8">
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {services.map((service, index) => (
+          <div className="mt-5">
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(data.welcome_page_products || []).map((product, index) => (
                 <li
                   key={index}
-                  className="flex items-center gap-3 text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-300 bg-gray-100 rounded-lg p-4 shadow-md"
+                  className="flex items-center gap-2 text-sm font-semibold text-gray-800 hover:text-[#00ADE7] transition-colors duration-300 bg-gray-100 rounded-lg p-3 shadow-sm"
                 >
-                  <span className="w-4 h-4 bg-blue-500 rounded-full inline-block animate-pulse"></span>
-                  {service}
+                  <span className="w-3 h-3 bg-gradient-to-r from-[#00ADE7] to-[#305292] rounded-full inline-block"></span>
+                  {product.name}
                 </li>
               ))}
             </ul>
-            <div className="mt-8">
-              <Link to="/viewproducts">
-                <ConfigProvider theme={{ token: { colorPrimary: "#6253e1" } }}>
+            <div className="mt-5">
+              {/* ✅ FIXED: Navigate to /products instead of /viewproducts */}
+              <Link to="/products">
+                <ConfigProvider
+                  theme={{
+                    token: {
+                      colorPrimary: "#00ADE7",
+                    },
+                  }}
+                >
                   <Button
                     type="primary"
                     size="large"
                     icon={<ArrowRightOutlined />}
+                    className="font-semibold shadow-md border-0 hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-300"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, #00ADE7 0%, #305292 50%, #27AAE1 100%)",
+                      borderRadius: "10px",
+                    }}
                   >
-                    View Products
+                    <span className="text-white">{data.welcome_cta_text}</span>
                   </Button>
                 </ConfigProvider>
               </Link>
@@ -511,125 +498,84 @@ const About = () => {
         </div>
       </div>
 
-      {/* Carousel Section */}
-      <div className="p-6 bg-slate-200">
-        <Carousel autoplay dots={true}>
-          {groupedFeatures.map((group, index) => (
-            <div key={index} className="p-5">
-              <Row gutter={[16, 16]} justify="center">
-                {group.map((feature, idx) => (
-                  <Col key={idx} xs={24} sm={12} md={6}>
-                    <div className="relative w-full h-72 bg-white shadow-md rounded-lg p-5 text-center flex flex-col items-center transition duration-300 hover:bg-slate-500 hover:text-white group hover:cursor-pointer">
-                      {/* Image & Icon Toggle on Hover */}
-                      <div className="relative w-16 h-16 flex items-center justify-center">
-                        {/* Image (Hidden on Hover) */}
-                        <img
-                          src={feature.picture}
-                          alt={feature.heading}
-                          className="absolute w-full h-full object-contain transition-opacity duration-300 group-hover:opacity-0"
-                        />
-
-                        {/* Icon (Visible on Hover) */}
-                        <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white">
-                          {feature.icon}
+      {/* FEATURES CAROUSEL - FROM STRAPI */}
+      {groupedFeatures.length > 0 && (
+        <div className="container mx-auto p-4 mb-16">
+          <div className="p-6 bg-slate-200">
+            <Carousel autoplay dots>
+              {groupedFeatures.map((group, index) => (
+                <div key={index} className="p-5">
+                  <Row gutter={[16, 16]} justify="center">
+                    {group.map((feature, idx) => (
+                      <Col key={idx} xs={24} sm={12} md={6} lg={6}>
+                        <div className="relative w-full h-72 bg-white shadow-md rounded-lg p-5 text-center flex flex-col items-center transition-all duration-300 hover:bg-gradient-to-r hover:from-[#00ADE7] hover:to-[#305292] hover:text-white group cursor-pointer">
+                          <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-br from-[#00ADE7]/15 to-[#305292]/15 mb-5 group-hover:scale-110 transition-transform duration-500">
+                            {feature.icon}
+                          </div>
+                          <h2 className="mt-3 text-lg font-bold">
+                            {feature.heading}
+                          </h2>
+                          <p className="text-sm text-gray-600 group-hover:text-white transition-colors duration-300">
+                            {feature.description}
+                          </p>
                         </div>
-                      </div>
-
-                      {/* Text */}
-                      <h2 className="mt-3 text-lg font-bold">
-                        {feature.heading}
-                      </h2>
-                      <p className="text-sm text-gray-600 group-hover:text-white">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </Col>
-                ))}
-              </Row>
-            </div>
-          ))}
-        </Carousel>
-      </div>
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="w-full md:w-1/2">
-            <img
-              src="https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fpikaso_texttoimage_cctv-image-in-public-where-focus-on-cctv--(1)_1729858339024_8bdb85c9db9b.png&w=384&q=75"
-              alt=""
-              className="w-full h-auto rounded-md"
-            />
-          </div>
-          <div className="w-full md:w-1/2">
-            <img
-              src="https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fpikaso_texttoimage_cctv-image-in-public-where-focus-on-cctv--(2)_1729858350210_6727284604ed.png&w=384&q=75"
-              alt=""
-              className="w-full h-auto rounded-md"
-            />
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              ))}
+            </Carousel>
           </div>
         </div>
+      )}
 
-        <div className="som_container grid grid-cols-1 md:grid-cols-2 gap-8 my-10 p-4">
-          <div className="w-full">
+      {/* IN HOUSE MANUFACTURING - FROM STRAPI */}
+      <div className="w-full px-4 sm:px-6 lg:px-16 py-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative rounded-2xl overflow-hidden shadow-lg">
             <img
-              src="https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fpikaso_texttoimage_cctv-image-in-public-where-focus-on-cctv-_1729858389940_16243449d9c8.png&w=750&q=75"
-              alt=""
-              className="w-full h-auto rounded-md"
+              src={
+                getMediaUrl(data.manufacturing_image) ||
+                "https://via.placeholder.com/1200x600?text=In+House+Manufacturing"
+              }
+              alt="In House Manufacturing"
+              className="w-full h-auto object-cover"
+              style={{ aspectRatio: "16/9", minHeight: "300px" }}
+              loading="lazy"
             />
-          </div>
-          <div className="w-full">
-            <h1 className="text-2xl md:text-4xl font-bold">
-              In House Manufacturing
-            </h1>
-            <p className="text-lg md:text-xl mt-2">
-              Our CCTV cameras are meticulously crafted through in-house
-              manufacturing with an eye for detail by the best engineers,
-              enabling complete control over quality, innovation, and precision.
-            </p>
-          </div>
-        </div>
-
-        <div className="success_stories bg-slate-200 p-6 md:p-10">
-          <h1 className="text-2xl md:text-4xl font-bold">Success Stories</h1>
-          <p className="text-lg md:text-xl">
-            Experience comprehensive home security solutions.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 p-4">
-            {[
-              {
-                src: "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fhi-focus-india-1440-x-540_esi-hospital-chennai-ayanavaram_1740391451467_4294683be726.jpg&w=1920&q=75",
-                text: "Case Study: Guarding Every Minute at ESIC Hospital",
-              },
-              {
-                src: "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fdesktop_1739452086102_fb4cc3f60203.jpg&w=1920&q=75",
-                text: "Case Study: Enhancing Surveillance at Egmore Museum with Hifocus CCTV Solutions",
-              },
-              {
-                src: "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fframe-295_1731565934475_3f4ad49d6c0c.png&w=1920&q=75",
-                text: "Transforming Security at Suryoday Institute of Technology",
-              },
-              {
-                src: "https://hifocuscctv.com/_next/image?url=https%3A%2F%2Fapi.hifocuscctv.com%2Fpublic%2Fcontent%2Fframe-286_1731565224527_6dcd3d083a82.png&w=1920&q=75",
-                text: "Dhanvantar Securing University’s New Campus",
-              },
-            ].map((item, index) => (
-              <div key={index} className="text-center">
-                <img
-                  src={item.src}
-                  alt={`Image ${index + 1}`}
-                  className="w-full h-40 object-cover rounded-md shadow-md"
-                />
-                <p className="mt-2">{item.text}</p>
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-center px-4">
+              <div className="max-w-3xl">
+                <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3">
+                  {data.manufacturing_title}
+                </h2>
+                <p className="text-sm sm:text-base md:text-lg text-gray-200 leading-relaxed">
+                  {data.manufacturing_description}
+                </p>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
-      <div className="bg-red-500">
+
+      {/* Scroll Top */}
+      <div>
         <ScrollTop
           target="window"
           threshold={100}
-          className="w-3rem h-3rem border-round bg-orange-600"
-          icon="pi pi-arrow-up text-white text-xl" // Apply orange color here
+          className="w-12 h-12 rounded-full bg-gradient-to-r from-[#00ADE7] to-[#305292] flex items-center justify-center shadow-lg hover:scale-125 hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer"
+          icon={
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
+          }
         />
       </div>
     </div>

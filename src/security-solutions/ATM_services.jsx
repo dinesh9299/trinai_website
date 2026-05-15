@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import { ScrollTop } from "primereact/scrolltop";
 import {
   Eye,
   Shield,
@@ -7,7 +8,6 @@ import {
   UserCheck,
   Bell,
   Cloud,
-  ArrowRight,
   Building,
   Store,
   MapPin,
@@ -24,37 +24,31 @@ const features = [
     icon: Eye,
     title: "HD Night Vision",
     desc: "24/7 clarity for all lighting conditions with advanced infrared technology.",
-    color: "from-blue-500 to-blue-600",
   },
   {
     icon: UserCheck,
     title: "Facial Recognition & Loitering Detection",
     desc: "AI-powered identification and suspicious behavior detection with high accuracy.",
-    color: "from-purple-500 to-purple-600",
   },
   {
     icon: Video,
     title: "Audio & Video Recording",
     desc: "High-definition recording capabilities for comprehensive evidence collection.",
-    color: "from-emerald-500 to-emerald-600",
   },
   {
     icon: Shield,
     title: "Tamper-Proof & Weather-Resistant",
     desc: "Durable housing designed for reliable protection in all weather conditions.",
-    color: "from-orange-500 to-orange-600",
   },
   {
     icon: Bell,
     title: "Real-Time Remote Access & Alerts",
     desc: "Instant notifications and remote monitoring capabilities for security teams.",
-    color: "from-red-500 to-red-600",
   },
   {
     icon: Cloud,
     title: "Integration with Central Security",
     desc: "Seamless connectivity with existing bank security and monitoring systems.",
-    color: "from-indigo-500 to-indigo-600",
   },
 ];
 
@@ -63,25 +57,21 @@ const applications = [
     icon: Building,
     title: "Bank-Operated ATM Kiosks",
     desc: "Comprehensive security for bank-owned ATM installations",
-    color: "from-blue-500 to-indigo-500",
   },
   {
     icon: Store,
     title: "Standalone ATMs at Retail Locations",
     desc: "Protection for ATMs at petrol pumps, malls, and retail outlets",
-    color: "from-emerald-500 to-teal-500",
   },
   {
     icon: MapPin,
     title: "ATM Centers in Remote Areas",
     desc: "Enhanced security for isolated and rural ATM installations",
-    color: "from-orange-500 to-red-500",
   },
   {
     icon: Shield,
     title: "High-Traffic Areas",
     desc: "Advanced monitoring for busy locations requiring stronger security",
-    color: "from-purple-500 to-pink-500",
   },
 ];
 
@@ -118,20 +108,27 @@ const ATM_services = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="relative overflow-hidden h-[400px]  border bg-[url('https://images.unsplash.com/photo-1506765515384-028b60a970df?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmFubmVyfGVufDB8fDB8fHww')] bg-cover bg-center"
+        className="relative overflow-hidden h-[400px] md:h-[500px] bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1506765515384-028b60a970df?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmFubmVyfGVufDB8fDB8fHww')",
+        }}
       >
-        {/* Background Elements */}
-        {/* <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl" /> */}
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#00ADE7]/90 via-[#305292]/85 to-[#00ADE7]/90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        <div className="relative max-w-7xl mx-auto px-4 py-20">
+        {/* Decorative Elements */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+
+        <div className="relative max-w-7xl mx-auto px-4 py-20 z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,20 +139,20 @@ const ATM_services = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-              className="inline-flex items-center bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 mb-6 shadow-lg"
+              className="inline-flex items-center bg-white/20 backdrop-blur-md rounded-full px-6 py-3 mb-6 shadow-lg border border-white/30"
             >
-              <Shield className="w-5 h-5 text-blue-600 mr-2" />
-              <span className="text-sm font-semibold text-gray-700">
+              <Shield className="w-5 h-5 text-white mr-2" />
+              <span className="text-sm font-semibold text-white">
                 Advanced ATM Security
               </span>
             </motion.div>
 
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              <span className="text-black bg-clip-text">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
+              <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
                 ATM Security Cameras in Smart Surveillance
               </span>
             </h1>
-            <p className="text-xl text-gray-900 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-white/95 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
               24/7 protection for customers and financial institutions with
               AI-powered monitoring
             </p>
@@ -163,18 +160,17 @@ const ATM_services = () => {
         </div>
       </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="max-w-7xl mx-auto px-4 py-16 space-y-20">
         {/* Introduction Section */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="mb-20"
         >
-          <div className="bg-gradient-to-br from-blue-50 to-teal-50 backdrop-blur-sm rounded-3xl p-8 shadow-lg border border-white/20">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-              <Globe className="w-8 h-8 text-blue-400 mr-3" />
+          <div className="bg-gradient-to-br from-[#00ADE7]/5 to-[#305292]/5 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-xl border border-[#00ADE7]/20">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-6 flex items-center">
+              <Globe className="w-8 h-8 text-[#00ADE7] mr-3" />
               Introduction
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
@@ -193,11 +189,10 @@ const ATM_services = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="mb-20"
         >
-          <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-3xl p-8 border border-blue-200/30">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-              <Eye className="w-8 h-8 text-blue-400 mr-3" />
+          <div className="bg-gradient-to-br from-[#00ADE7]/5 to-[#305292]/5 rounded-3xl p-8 md:p-12 shadow-xl border border-[#00ADE7]/20">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-6 flex items-center">
+              <Eye className="w-8 h-8 text-[#00ADE7] mr-3" />
               What is ATM Surveillance?
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
@@ -215,11 +210,10 @@ const ATM_services = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="mb-20"
         >
-          <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-3xl p-8 border border-emerald-200/30">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-              <AlertTriangle className="w-8 h-8 text-blue-400 mr-3" />
+          <div className="bg-gradient-to-br from-[#00ADE7]/5 to-[#305292]/5 rounded-3xl p-8 md:p-12 shadow-xl border border-[#00ADE7]/20">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-6 flex items-center">
+              <AlertTriangle className="w-8 h-8 text-[#00ADE7] mr-3" />
               Why Are ATM Security Cameras Important?
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
@@ -237,10 +231,9 @@ const ATM_services = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="mb-20"
         >
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-4">
               How ATM Security Works
             </h2>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
@@ -258,54 +251,41 @@ const ATM_services = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-[#00ADE7]/30 group"
               >
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#00ADE7] to-[#305292] rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-[#00ADE7] to-[#305292] rounded-full flex items-center justify-center text-white font-bold text-lg mr-3 group-hover:scale-110 transition-transform duration-300">
                     {process.step}
                   </div>
-                  <process.icon className="w-6 h-6 text-blue-400" />
+                  <process.icon className="w-6 h-6 text-[#00ADE7]" />
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:bg-gradient-to-r group-hover:from-[#00ADE7] group-hover:to-[#305292] group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                   {process.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">{process.desc}</p>
+                <p className="text-gray-600 leading-relaxed text-sm">
+                  {process.desc}
+                </p>
+
+                {/* Connector Line */}
+                {index < workingProcess.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-gradient-to-r from-[#00ADE7] to-[#305292]"></div>
+                )}
               </motion.div>
             ))}
           </div>
         </motion.section>
 
-        {/* CTA Section */}
-        {/* <motion.section
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-12 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center mx-auto text-lg"
-          >
-            Get Started with ATM Surveillance
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </motion.button>
-        </motion.section> */}
-      </div>
-
-      <div className="bg-white">
         {/* Key Features Section */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="lg:p-20 p-5 bg-gradient-to-br from-blue-50 to-teal-50"
+          className="lg:p-20 p-5"
         >
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-4">
               Key Features
             </h2>
           </div>
@@ -317,38 +297,27 @@ const ATM_services = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300"
+                whileHover={{ y: -8 }}
+                className="group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden"
               >
-                <div
-                  className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-3xl"
-                  style={{
-                    backgroundImage: `linear-gradient(135deg, ${
-                      feature.color.split(" ")[1]
-                    }, ${feature.color.split(" ")[3]})`,
-                  }}
-                />
+                {/* Gradient Background on Hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00ADE7]/5 to-[#305292]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                <div
-                  className={`inline-flex p-4 rounded-2xl bg-gradient-to-r from-[#00ADE7] to-[#305292] mb-6`}
-                >
-                  <feature.icon className="w-8 h-8 text-white" />
+                {/* Top Gradient Border */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00ADE7] to-[#305292] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+
+                <div className="relative z-10">
+                  <div className="inline-flex p-4 rounded-2xl bg-gradient-to-r from-[#00ADE7] to-[#305292] mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <feature.icon className="w-8 h-8 text-white" />
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:bg-gradient-to-r group-hover:from-[#00ADE7] group-hover:to-[#305292] group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 text-lg leading-relaxed">
+                    {feature.desc}
+                  </p>
                 </div>
-
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-lg leading-relaxed">
-                  {feature.desc}
-                </p>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  whileHover={{ opacity: 1, x: 0 }}
-                  className="absolute bottom-6 right-6"
-                >
-                  <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-gray-600 transition-colors" />
-                </motion.div>
               </motion.div>
             ))}
           </div>
@@ -363,7 +332,7 @@ const ATM_services = () => {
           className="lg:p-20 p-5"
         >
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent mb-4">
               Applications
             </h2>
           </div>
@@ -375,19 +344,19 @@ const ATM_services = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-[#00ADE7]/30 group"
               >
-                <div
-                  className={`bg-gradient-to-br from-[#00ADE7] to-[#305292]  rounded-xl p-4 w-fit mb-4`}
-                >
+                <div className="bg-gradient-to-br from-[#00ADE7] to-[#305292] rounded-xl p-4 w-fit mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <app.icon className="w-8 h-8 text-white" />
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:bg-gradient-to-r group-hover:from-[#00ADE7] group-hover:to-[#305292] group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                   {app.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">{app.desc}</p>
+                <p className="text-gray-600 leading-relaxed text-sm">
+                  {app.desc}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -399,25 +368,28 @@ const ATM_services = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className=""
         >
-          <div className="bg-gradient-to-r from-[#00ADE7] to-[#305292] rounded-3xl p-12 text-center text-white relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-black/10" />
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/10 rounded-full" />
-            <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-white/10 rounded-full" />
+          <div className="bg-gradient-to-r from-[#00ADE7] to-[#305292] rounded-3xl p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
+            {/* Decorative Elements */}
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
 
             <div className="relative z-10">
               <motion.div
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200 }}
-                className="inline-flex p-4 bg-white/20 backdrop-blur-sm rounded-2xl mb-6"
+                initial={{ scale: 0, rotate: -180 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                className="inline-flex p-4 bg-white/20 backdrop-blur-md rounded-2xl mb-6 shadow-lg border border-white/30"
               >
                 <Shield className="w-12 h-12 text-white" />
               </motion.div>
 
-              <h2 className="text-4xl font-bold mb-6">Why Trinai?</h2>
-              <p className="text-xl text-white/90 max-w-4xl mx-auto leading-relaxed">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Why Trinai?
+              </h2>
+              <p className="text-xl text-white/95 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
                 TRINAI's advanced ATM surveillance cameras ensure peace of mind
                 for banks and customers. With intelligent monitoring and instant
                 alerts, you protect financial assets and maintain public trust
@@ -426,6 +398,28 @@ const ATM_services = () => {
             </div>
           </div>
         </motion.section>
+      </div>
+
+      {/* 🔥 Scroll to Top Button - PLACE THIS AT THE END OF MAIN DIV */}
+      <div>
+        <ScrollTop
+          target="window"
+          threshold={100}
+          className="w-12 h-12 rounded-full bg-gradient-to-r from-[#00ADE7] to-[#305292] flex items-center justify-center shadow-lg hover:scale-125 hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer"
+          icon={
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
+          }
+        />
       </div>
     </div>
   );

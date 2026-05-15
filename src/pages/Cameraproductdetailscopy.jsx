@@ -42,7 +42,7 @@ function Cameraproductsdetails() {
           <img
             src={`${import.meta.env.BASE_URL}${product.picture.replace(
               /^\/+/,
-              ""
+              "",
             )}`}
             alt={product.model}
             className={` ${
@@ -69,7 +69,7 @@ function Cameraproductsdetails() {
         <div className="flex gap-6 pt-3 px-5 bg-slate-200 my-5 rounded-md">
           <div
             className={`cursor-pointer font-semibold h-10 p-2 rounded-t-md ${
-              preview ? "bg-white text-orange-600" : ""
+              preview ? "bg-white text-[#07518a]" : ""
             }`}
             onClick={HandlePreview}
           >
@@ -77,7 +77,7 @@ function Cameraproductsdetails() {
           </div>
           <div
             className={`cursor-pointer font-semibold h-10 p-2 rounded-t-md ${
-              download ? "bg-white text-orange-600" : ""
+              download ? "bg-white text-[#07518a]" : ""
             }`}
             onClick={HandleDownload}
           >
@@ -92,7 +92,7 @@ function Cameraproductsdetails() {
               <Viewer
                 fileUrl={`${import.meta.env.BASE_URL}${product.document.replace(
                   /^\/+/,
-                  ""
+                  "",
                 )}`}
               />
             </div>
