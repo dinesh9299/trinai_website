@@ -879,7 +879,7 @@
 
 // export default Header;
 
-// src/components/Header.jsx - PRODUCTION READY (FINAL VERSION - ALL CATEGORIES WORKING)
+// src/components/Header.jsx - PRODUCTION READY (FIXED SCROLL BEHAVIOR)
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -920,7 +920,7 @@ const categories = [
   "Network Video Recorder",
   "Server",
   "Smart GPU with AI Camera",
-  "AI Based Face Recognition", // ✅ CHANGED from "Trinai Facial BioStand"
+  "AI Based Face Recognition",
   "Mobile DVR",
 ];
 
@@ -948,13 +948,6 @@ const productsByCategory = {
     { name: "4MP PTZ Camera", type: "4mp-ptz-camera" },
   ],
   "Thermal Cameras": [{ name: "Thermal Cameras", type: "thermal-cameras" }],
-  // "Network Video Recorder": [
-  //   { name: "16/32-Channel NVR", type: "16-32-channel-nvr" },
-  //   { name: "64-Channel NVR", type: "64-channel-nvr" },
-  //   { name: "MDVR", type: "mdvr" },
-  // ],
-  // In Header.jsx, update the productsByCategory section:
-
   "Network Video Recorder": [
     { name: "16 32 Channel Input NVR", type: "16-32-channel-input-nvr" },
     { name: "16 32 64 Channel Input NVR", type: "16-32-64-channel-input-nvr" },
@@ -962,22 +955,15 @@ const productsByCategory = {
   ],
   Server: [{ name: "Server", type: "server" }],
   "Smart GPU with AI Camera": [
-    { name: "Smart GPU with AI Camera", type: "smart-gpu-with-ai-camera" }, // ✅ Full slug
+    { name: "Smart GPU with AI Camera", type: "smart-gpu-with-ai-camera" },
   ],
   "AI Based Face Recognition": [
-    // ✅ CHANGED
     {
       name: "Facial Recognition Terminal",
       type: "facial-recognition-terminal",
-    }, // ✅ CHANGED
+    },
   ],
-  // In Header.jsx, update the productsByCategory section:
-
-  "Mobile DVR": [
-    { name: "MDVR Control Panel", type: "mdvr-control-panel" }, // ✅ Match actual product name
-  ],
-
-  // Display: [{ name: "Display", type: "display" }],
+  "Mobile DVR": [{ name: "MDVR Control Panel", type: "mdvr-control-panel" }],
 };
 
 // ========== CATEGORY IMAGES ==========
@@ -990,7 +976,7 @@ const categoryImages = {
   "Thermal Cameras": thermal,
   "Network Video Recorder": nvr,
   "Smart GPU with AI Camera": gpu,
-  "AI Based Face Recognition": aifacerecognition, // ✅ CHANGED
+  "AI Based Face Recognition": aifacerecognition,
   Display: display,
   "Mobile DVR": display,
 };
@@ -1004,19 +990,6 @@ const slugify = (text) => {
     .replace(/[^\w\s-]/g, "")
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
-};
-
-// 🔥 Convert product type slug to readable format for filtering
-const productTypeToReadable = (slug) => {
-  return slug
-    .split("-")
-    .map((word) => {
-      if (word.match(/^\d+mp$/i)) {
-        return word.toUpperCase();
-      }
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(" ");
 };
 
 const Header = () => {
@@ -1093,25 +1066,45 @@ const Header = () => {
   const isCategoryPage = pathParts[0] === "products" && pathParts.length === 2;
   const isProductTypePage =
     pathParts[0] === "products" && pathParts.length === 3;
-  const isProductDetailPage =
-    pathParts[0] === "products" && pathParts.length >= 4;
+
+  // ✅ Check for query params to determine if it's a product detail page
+  const hasProductParams =
+    location.search.includes("model=") || location.search.includes("id=");
+
+  // ✅ Product detail page = has query params (model or id)
+  const isProductDetailPage = isProductTypePage && hasProductParams;
+
   const isAboutPage = location.pathname === "/about";
 
+  // ✅ KEY FIX: Only force white header on About page OR product detail pages (with query params)
   const forceWhiteHeader = isAboutPage || isProductDetailPage;
+
+  // ✅ Show white header when: scrolled OR forced OR mega menu open
   const showWhiteHeader = isScrolled || forceWhiteHeader || isCategoriesOpen;
 
   // Scroll effect
   useEffect(() => {
     const onScroll = () => {
+      // ✅ DIFFERENT BEHAVIOR:
+      // - About page: Always show white header
+      // - Product detail pages (with query params): Always show white header
+      // - Product type pages (no query params): Show white header only after scrolling
+      // - Category pages: Show white header after scrolling
+      // - Home/other: Show white header after minimal scroll
       if (forceWhiteHeader) {
         setIsScrolled(true);
       } else if (isCategoryPage || isProductTypePage) {
+        // ✅ Product/Category pages: White header after 50px scroll
         setIsScrolled(window.scrollY > 50);
       } else {
+        // ✅ Home/other: White header after 10px scroll
         setIsScrolled(window.scrollY > 10);
       }
     };
+
+    // Run once on mount
     onScroll();
+
     window.addEventListener("scroll", onScroll);
     return () => {
       window.removeEventListener("scroll", onScroll);
@@ -1132,29 +1125,7 @@ const Header = () => {
     return location.pathname.startsWith(path);
   };
 
-  // 🔥 KEY NAVIGATION FUNCTION - DESKTOP
-  const handleProductClick = (product) => {
-    if (!product) {
-      // "See More" clicked - go to category page
-      const categorySlug = slugify(selectedCategory);
-      console.log("📍 See More clicked →", `/products/${categorySlug}`);
-      navigate(`/products/${categorySlug}`);
-    } else {
-      // Product type clicked (2MP, 3MP, 64-Channel, etc.)
-      const categorySlug = slugify(selectedCategory);
-      const productTypeSlug = product.type || slugify(product.name);
-      console.log(
-        "📍 Product type clicked:",
-        product.name,
-        "→",
-        `/products/${categorySlug}/${productTypeSlug}`,
-      );
-      navigate(`/products/${categorySlug}/${productTypeSlug}`);
-    }
-    setIsCategoriesOpen(false);
-  };
-
-  // Menu handlers
+  // 🔥 MEGA MENU HANDLERS
   const handleMenuEnter = () => {
     if (closeTimeout) clearTimeout(closeTimeout);
     setIsCategoriesOpen(true);
@@ -1165,14 +1136,53 @@ const Header = () => {
     setCloseTimeout(timeout);
   };
 
-  const handleNavClick = (path) => {
-    navigate(path);
-    setIsMenuOpen(false);
+  // 🔥 KEY NAVIGATION FUNCTION - DESKTOP (SEO-FRIENDLY WITH QUERY PARAMS)
+  const handleProductClick = (product) => {
+    if (!product) {
+      // "See More" clicked - go to category page
+      const categorySlug = slugify(selectedCategory);
+      console.log("📍 See More clicked →", `/products/${categorySlug}`);
+      navigate(`/products/${categorySlug}`);
+    } else {
+      // Product type clicked - find FIRST matching product to get ID and model
+      const categorySlug = slugify(selectedCategory);
+      const productTypeSlug = product.type || slugify(product.name);
+
+      // ✅ Find the first product in this category/type from productsall
+      const realProduct = productsall.find((p) => {
+        const categoryMatch = p.cameraType
+          ?.toLowerCase()
+          .includes(selectedCategory.toLowerCase());
+        const typeMatch = p.productType
+          ?.toLowerCase()
+          .includes(productTypeSlug.replace(/-/g, " "));
+        return categoryMatch && typeMatch;
+      });
+
+      if (realProduct?.id) {
+        // ✅ Navigate with query params for SEO + reliable product matching
+        console.log(
+          "✅ Product found:",
+          realProduct.name,
+          "→",
+          `/products/${categorySlug}/${productTypeSlug}?model=${encodeURIComponent(realProduct.model)}&id=${realProduct.id}`,
+        );
+        navigate(
+          `/products/${categorySlug}/${productTypeSlug}?model=${encodeURIComponent(realProduct.model)}&id=${realProduct.id}`,
+        );
+      } else {
+        // Fallback: navigate to product type page without ID (will show grid)
+        console.log(
+          "⚠️ Product not found in productsall, navigating to:",
+          `/products/${categorySlug}/${productTypeSlug}`,
+        );
+        navigate(`/products/${categorySlug}/${productTypeSlug}`);
+      }
+    }
     setIsCategoriesOpen(false);
-    setIsMobileProductsOpen(false);
   };
 
-  // 🔥 KEY NAVIGATION FUNCTION - MOBILE
+  // 🔥 KEY NAVIGATION FUNCTION - MOBILE (SEO-FRIENDLY WITH QUERY PARAMS)
   const handleMobileProductClick = (product) => {
     if (!product) {
       const categorySlug = slugify(mobileSelectedCategory);
@@ -1180,10 +1190,36 @@ const Header = () => {
     } else {
       const categorySlug = slugify(mobileSelectedCategory);
       const productTypeSlug = product.type || slugify(product.name);
-      navigate(`/products/${categorySlug}/${productTypeSlug}`);
+
+      // ✅ Find the first product in this category/type
+      const realProduct = productsall.find((p) => {
+        const categoryMatch = p.cameraType
+          ?.toLowerCase()
+          .includes(mobileSelectedCategory.toLowerCase());
+        const typeMatch = p.productType
+          ?.toLowerCase()
+          .includes(productTypeSlug.replace(/-/g, " "));
+        return categoryMatch && typeMatch;
+      });
+
+      if (realProduct?.id) {
+        // ✅ Navigate with query params for SEO
+        navigate(
+          `/products/${categorySlug}/${productTypeSlug}?model=${encodeURIComponent(realProduct.model)}&id=${realProduct.id}`,
+        );
+      } else {
+        navigate(`/products/${categorySlug}/${productTypeSlug}`);
+      }
     }
     setIsMobileProductsOpen(false);
     setIsMenuOpen(false);
+  };
+
+  const handleNavClick = (path) => {
+    navigate(path);
+    setIsMenuOpen(false);
+    setIsCategoriesOpen(false);
+    setIsMobileProductsOpen(false);
   };
 
   const toggleMobileProducts = () =>
@@ -1476,7 +1512,7 @@ const Header = () => {
                 setIsMenuOpen(false);
                 setIsMobileProductsOpen(false);
               }}
-              className={`py-3 px-4 rounded-lg mb-2 transition-all ${"text-black hover:bg-[#f0f7ff]"}`}
+              className={`py-3 px-4 rounded-lg mb-2 transition-all text-black hover:bg-[#f0f7ff]`}
             >
               About
             </Link>
