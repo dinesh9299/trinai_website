@@ -980,15 +980,16 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ===== FETCH ALL DATA FROM STRAPI API =====
   useEffect(() => {
     window.scrollTo(0, 0);
 
     const fetchHomeData = async () => {
       try {
         setLoading(true);
+
+        // MOST COMPLETE API ENDPOINT - Populates EVERYTHING
         const response = await fetch(
-          `${STRAPI_BASE_URL}/api/homehero?populate[what_we_offer][populate]=cards&populate[Products][populate][productcards][populate]=image&populate[TrinaiBusinessSolutionscards][populate]=BusinessSolutionscards&populate[VelocitySeries][populate]=velocity_image&populate[smartdata][populate]=smart_ip_image`,
+          `${STRAPI_BASE_URL}/api/homehero?populate[0]=hero_video&populate[1]=who_image&populate[2]=what_we_offer.cards&populate[3]=Products.productcards.image&populate[4]=TrinaiBusinessSolutionscards.BusinessSolutionscards.image&populate[5]=VelocitySeries.velocity_image&populate[6]=smartdata.smart_ip_image`,
         );
 
         if (!response.ok) {
@@ -996,88 +997,87 @@ const Home = () => {
         }
 
         const result = await response.json();
-        setHomeData(result.data);
+        console.log("FULL API RESPONSE:", result);
+
+        // Check if data is in result.data or result.data.attributes
+        const data = result.data?.attributes || result.data;
+        console.log("Extracted Data:", data);
+        console.log("Hero Video:", data?.hero_video);
+        console.log("Who Image:", data?.who_image);
+
+        setHomeData(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching home ", err);
         setError(err.message);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
+        setTimeout(() => setLoading(false), 500);
       }
     };
 
     fetchHomeData();
   }, []);
 
-  // ===== HELPER: Get proper image URL from Strapi response =====
-  const getImageUrl = (imageData) => {
-    if (!imageData) return null;
+  const getMediaUrl = (mediaData) => {
+    if (!mediaData) return null;
 
-    // If it's already a full URL (ImageKit or external)
-    if (typeof imageData === "string" && imageData.startsWith("http")) {
-      return imageData.trim();
+    // Try different formats
+    if (typeof mediaData === "string") {
+      if (mediaData.startsWith("http")) return mediaData;
+      if (mediaData.startsWith("/uploads"))
+        return `${STRAPI_BASE_URL}${mediaData}`;
+      return mediaData;
     }
 
-    // If it's a Strapi image object with url property
-    if (imageData?.url) {
-      if (imageData.url.startsWith("http")) {
-        return imageData.url.trim();
-      }
-      // Relative URL from Strapi - prepend base URL
-      return `${STRAPI_BASE_URL}${imageData.url}`.trim();
+    if (mediaData.url) {
+      if (mediaData.url.startsWith("http")) return mediaData.url;
+      return `${STRAPI_BASE_URL}${mediaData.url}`;
+    }
+
+    if (mediaData.data?.attributes?.url) {
+      const url = mediaData.data.attributes.url;
+      if (url.startsWith("http")) return url;
+      return `${STRAPI_BASE_URL}${url}`;
     }
 
     return null;
   };
 
-  // ===== HELPER: Extract plain text from Strapi rich text field =====
-  const extractRichText = (richTextArray) => {
-    if (!richTextArray || !Array.isArray(richTextArray)) return "";
-
-    return richTextArray
-      .filter((item) => item?.type === "paragraph")
-      .map((item) => {
-        const textParts = item?.children
-          ?.filter((child) => child?.type === "text" && child?.text?.trim())
-          .map((child) => child.text.trim());
-        return textParts?.join(" ") || "";
-      })
-      .filter((text) => text && text.trim() !== "")
+  const extractRichText = (richText) => {
+    if (!richText || !Array.isArray(richText)) return "";
+    return richText
+      .filter((item) => item.type === "paragraph")
+      .map(
+        (item) =>
+          item.children
+            ?.filter((c) => c.text)
+            ?.map((c) => c.text)
+            .join(" ") || "",
+      )
+      .filter((text) => text)
       .join("\n\n");
   };
 
-  // ===== LOADING STATE =====
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-black">
-        <div className="flex">
-          <img
-            src="https://media.tenor.com/kh1ED9iY26UAAAAm/cam-camera.webp"
-            width={200}
-            height={200}
-            alt="CCTV Loader"
-            className="w-auto h-auto object-contain"
-          />
-        </div>
-        <p className="text-white text-lg mt-4 animate-pulse">
-          Scanning... Please wait
-        </p>
+      <div className="flex justify-center items-center h-screen bg-black">
+        <img
+          src="https://media.tenor.com/kh1ED9iY26UAAAAm/cam-camera.webp"
+          width={200}
+          alt="Loading"
+        />
+        <p className="text-white mt-4">Loading...</p>
       </div>
     );
   }
 
-  // ===== ERROR STATE =====
-  if (error) {
+  if (error || !homeData) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-black">
-        <p className="text-white text-lg text-center px-4">
-          Error loading content: {error}
-        </p>
+      <div className="flex justify-center items-center h-screen bg-black">
+        <p className="text-white">Error loading data</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition"
+          className="ml-4 bg-white text-black px-4 py-2 rounded"
         >
           Retry
         </button>
@@ -1085,414 +1085,313 @@ const Home = () => {
     );
   }
 
-  // ===== EXTRACT ALL DATA FROM API RESPONSE =====
-  const hero = homeData || {};
-
-  // Parse rich text for who_description
-  const whoDescriptionText = extractRichText(hero.who_description);
-  const whoDescriptionParagraphs = whoDescriptionText
+  // Extract data with safe fallbacks
+  const videoUrl = getMediaUrl(homeData.hero_video);
+  const whoImageUrl = getMediaUrl(homeData.who_image);
+  const whoText = extractRichText(homeData.who_description)
     .split("\n\n")
-    .filter((p) => p.trim());
+    .filter((p) => p);
 
-  // What We Offer section (from API) - NOTE: lowercase with underscore
-  const whatWeOfferSection = hero.what_we_offer?.[0] || {};
-  const whatWeOfferCards = whatWeOfferSection.cards || [];
-
-  // Products section
-  const productsSection = hero.Products?.[0] || {};
-  const productCards = productsSection.productcards || [];
-
-  // Business Solutions section
-  const businessSolutionsSection = hero.TrinaiBusinessSolutionscards?.[0] || {};
-  const businessSolutionsCards =
-    businessSolutionsSection.BusinessSolutionscards || [];
-
-  // Velocity Series section
-  const velocity = hero.VelocitySeries || {};
-
-  // Smart IP Cameras section
-  const smartData = hero.smartdata?.[0] || {};
+  const whatWeOffer = homeData.what_we_offer?.[0] || {};
+  const products = homeData.Products?.[0] || {};
+  const businessSolutions = homeData.TrinaiBusinessSolutionscards?.[0] || {};
+  const velocity = homeData.VelocitySeries || {};
+  const smartData = homeData.smartdata?.[0] || {};
 
   return (
     <div className="w-full bg-white">
-      {/* ===== HERO VIDEO SECTION (100% FROM API) ===== */}
-      <div className="relative w-full h-[430px] sm:h-[530px] lg:h-[700px] overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="absolute top-0 left-0 w-full h-full object-cover"
-        >
-          <source src={hero.hero_video?.trim() || ""} type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-black/0 z-10" />
-        <div className="relative z-20 h-full flex flex-col justify-center text-white px-4 sm:px-8 md:px-14 lg:px-28">
-          <motion.h2
-            initial={{ x: -120, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.9 }}
-            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold max-w-3xl"
+      {/* HERO SECTION */}
+      <div className="relative h-[500px] lg:h-[700px] w-full overflow-hidden bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+        {videoUrl && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute w-full h-full object-cover"
           >
-            {hero.hero_title}
-          </motion.h2>
-          <motion.p
-            initial={{ x: 120, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="text-sm sm:text-base md:text-lg lg:text-2xl mt-4 max-w-3xl text-gray-200"
-          >
-            {hero.hero_description}
-          </motion.p>
-          <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <source src={videoUrl} type="video/mp4" />
+            <source src={videoUrl} type="video/webm" />
+          </video>
+        )}
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative z-10 flex flex-col justify-center h-full text-white px-6 lg:px-28">
+          <h1 className="text-3xl lg:text-5xl font-bold max-w-3xl">
+            {homeData.hero_title}
+          </h1>
+          <p className="text-lg lg:text-2xl mt-4 max-w-2xl">
+            {homeData.hero_description}
+          </p>
+          <div className="flex gap-4 mt-8">
             <Link
               to={
-                hero.hero_button_slug === "homehero"
+                homeData.hero_button_slug === "homehero"
                   ? "/solutions"
-                  : `/${hero.hero_button_slug}` || "/solutions"
+                  : `/${homeData.hero_button_slug}`
               }
             >
-              <button className="bg-white text-black font-bold px-6 py-3 rounded-md border hover:bg-gray-100 transition">
-                {hero.hero_button_text}
+              <button className="bg-white text-black px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                {homeData.hero_button_text || "Explore Solutions"}
               </button>
             </Link>
             <Link
               to={
-                hero.hero_button2_slug === "homehero"
+                homeData.hero_button2_slug === "homehero"
                   ? "/about"
-                  : `/${hero.hero_button2_slug}` || "/about"
+                  : `/${homeData.hero_button2_slug}`
               }
             >
-              <button className="bg-white text-black font-semibold px-6 py-3 rounded-md border border-white hover:bg-transparent hover:text-white">
-                {hero.hero_button2_text}
+              <button className="border-2 border-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition">
+                {homeData.hero_button2_text || "About Us"}
               </button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* ===== WHO WE ARE SECTION (100% FROM API) ===== */}
-      <div className="bg-white py-12 sm:py-14 lg:p-10 px-5 relative z-10 mb-30">
-        <div className="max-w-10xl mx-auto lg:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* LEFT COLUMN – TEXT */}
-            <div className="space-y-4">
-              <div className="text-xl font-bold bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-                {hero.who_title}
-              </div>
-              {whoDescriptionParagraphs.map((paragraph, index) => (
+      {/* WHO WE ARE */}
+      <div className="py-16 px-6 lg:px-20">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+              {homeData.who_title || "Who We Are"}
+            </h2>
+            {whoText.length > 0 ? (
+              whoText.map((p, i) => (
                 <p
-                  key={index}
-                  className="text-gray-600 text-base sm:text-lg leading-relaxed max-w-3xl"
+                  key={i}
+                  className="text-gray-600 text-lg mt-4 leading-relaxed"
                 >
-                  {paragraph}
+                  {p}
                 </p>
-              ))}
-            </div>
-            {/* RIGHT COLUMN – IMAGE */}
-            <div className="flex justify-center">
-              <div className="w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl">
-                <img
-                  src={getImageUrl(hero.who_image)}
-                  alt={hero.who_title}
-                  loading="lazy"
-                  className="w-full h-auto object-contain rounded-2xl"
-                />
+              ))
+            ) : (
+              <p className="text-gray-600 text-lg mt-4">
+                Loading description...
+              </p>
+            )}
+          </div>
+          <div>
+            {whoImageUrl ? (
+              <img
+                src={whoImageUrl}
+                alt="Who We Are"
+                className="w-full rounded-2xl shadow-lg"
+              />
+            ) : (
+              <div className="w-full h-96 bg-gray-200 rounded-2xl flex items-center justify-center">
+                <p className="text-gray-500">Upload who_image in Strapi</p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ===== WHAT WE OFFER (100% FROM API) ===== */}
-      <div className="bg-slate-50 py-14 px-5">
-        <div className="lg:px-10">
-          <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: false }}
-            className="mb-12"
-          >
-            {/* Gradient Title - FROM API */}
-            <div className="text-xl font-bold mb-3 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-              {whatWeOfferSection.title}
-            </div>
-            {/* Description - FROM API */}
-            <p className="text-gray-600 text-lg max-w-4xl">
-              {whatWeOfferSection.description}
+      {/* WHAT WE OFFER */}
+      {whatWeOffer.cards?.length > 0 && (
+        <div className="bg-gray-50 py-16 px-6 lg:px-20">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+              {whatWeOffer.title}
+            </h2>
+            <p className="text-gray-600 text-lg mt-2 mb-12">
+              {whatWeOffer.description}
             </p>
-          </motion.div>
-
-          {/* CARDS - FROM API */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {whatWeOfferCards.map((item, index) => (
-              <motion.div
-                key={item.id || index}
-                initial={{ y: 40, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: false }}
-                className="bg-gradient-to-br from-[#00ADE7] to-[#305292] rounded-xl p-6 shadow-lg text-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
-              >
-                <h3 className="text-white text-xl font-semibold mb-3">
-                  {item.title}
-                </h3>
-                <p className="text-white/90 text-base leading-relaxed">
-                  {item.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ===== PRODUCTS CAROUSEL (100% FROM API) ===== */}
-      <div className="bg-white py-14 px-5">
-        <div className="lg:px-10">
-          <div className="mb-10">
-            <div className="text-xl font-bold mb-2 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-              {productsSection.title}
-            </div>
-            <p className="text-gray-600 text-lg">
-              {productsSection.description}
-            </p>
-          </div>
-          <Carousel
-            autoplay
-            autoplaySpeed={1000}
-            dots={false}
-            slidesToShow={4}
-            slidesToScroll={1}
-            responsive={[
-              { breakpoint: 1024, settings: { slidesToShow: 3 } },
-              { breakpoint: 768, settings: { slidesToShow: 2 } },
-              { breakpoint: 480, settings: { slidesToShow: 1 } },
-            ]}
-          >
-            {productCards.map((item, index) => (
-              <div key={item.id || index} className="px-3">
-                <div className="bg-slate-50 rounded-xl p-6 shadow-md hover:shadow-xl transition flex flex-col items-center">
-                  <img
-                    src={getImageUrl(item.image)}
-                    alt={item.name}
-                    className="h-32 object-contain mb-4"
-                  />
-                  <h4 className="text-gray-800 font-semibold text-lg text-center">
-                    {item.name}
-                  </h4>
-                </div>
-              </div>
-            ))}
-          </Carousel>
-        </div>
-      </div>
-
-      {/* ===== TRINAI BUSINESS SOLUTIONS (100% FROM API) ===== */}
-      <div className="bg-slate-50 py-16 px-5">
-        <div className="lg:px-10">
-          <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: false }}
-            className="mb-12"
-          >
-            <div className="text-xl font-bold mb-2 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-              {businessSolutionsSection.title}
-            </div>
-            <p className="text-gray-600 text-lg max-w-4xl">
-              {businessSolutionsSection.description}
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {businessSolutionsCards.map((item, index) => (
-              <motion.div
-                key={item.id || index}
-                initial={{ y: 40, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.08 }}
-                viewport={{ once: false }}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition overflow-hidden group"
-              >
-                <div className="overflow-hidden">
-                  <img
-                    src={item.image?.trim()}
-                    alt={item.title}
-                    className="w-full h-56 object-cover group-hover:scale-110 transition duration-500"
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-bold text-gray-800">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 mt-2 text-sm leading-relaxed">
-                    {item.description}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {whatWeOffer.cards.map((card, i) => (
+                <div
+                  key={i}
+                  className="bg-gradient-to-br from-[#00ADE7] to-[#305292] rounded-xl p-6 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                >
+                  <h3 className="text-xl font-bold mb-3">{card.title}</h3>
+                  <p className="text-white/90 leading-relaxed">
+                    {card.description}
                   </p>
                 </div>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ===== VELOCITY SERIES SECTION (100% FROM API) ===== */}
-      <div className="p-5">
-        <div className="lg:grid rounded-md grid-cols-2 p-8 shadow shadow-white border">
-          <motion.div
-            initial={{ x: -200, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-          >
-            <img
-              src={getImageUrl(velocity.velocity_image)}
-              alt={velocity.velocity_title1}
-              className="w-full h-auto rounded-lg"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: false }}
-            className="m-2"
-          >
-            <div className="text-2xl font-bold mb-1 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-              {velocity.velocity_title1}
-            </div>
-            <div className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-              {velocity.velocity_title2}
-            </div>
-            <p className="text-gray-600 text-lg max-w-xl">
-              {extractRichText(velocity.velocity_description)}
+      {/* PRODUCTS CAROUSEL */}
+      {products.productcards?.length > 0 && (
+        <div className="py-16 px-6 lg:px-20">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+              {products.title}
+            </h2>
+            <p className="text-gray-600 text-lg mt-2 mb-12">
+              {products.description}
             </p>
-            <div className="mx-2 my-10">
-              <ConfigProvider
-                theme={{
-                  token: {
-                    colorPrimary: "#00ADE7",
-                    colorPrimaryHover: "#305292",
-                    colorPrimaryActive: "#27AAE1",
-                  },
-                }}
-              >
-                <Space>
-                  <Link
-                    to={velocity.velocity_button_link?.trim() || "/products"}
-                  >
-                    <Button
-                      type="primary"
-                      size="large"
-                      icon={<AntDesignOutlined />}
-                      className="font-semibold shadow-md bg-gradient-to-r from-[#00ADE7] via-[#305292] to-[#27AAE1] border-0 hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-300"
-                      style={{
-                        background:
-                          "linear-gradient(90deg, #00ADE7 0%, #305292 50%, #27AAE1 100%)",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      <span className="text-white">
-                        {velocity.velocity_button_text}
-                      </span>
-                    </Button>
-                  </Link>
-                </Space>
-              </ConfigProvider>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ===== SMART IP CAMERAS SECTION (100% FROM API) ===== */}
-      <div>
-        <div className="lg:p-10 bg-slate-50">
-          <div className="lg:grid mt-4 rounded-md grid-cols-2 p-8">
-            <motion.div
-              initial={{ x: -200, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className=""
+            <Carousel
+              autoplay
+              autoplaySpeed={2000}
+              dots={false}
+              slidesToShow={4}
+              slidesToScroll={1}
+              responsive={[
+                { breakpoint: 1024, settings: { slidesToShow: 3 } },
+                { breakpoint: 768, settings: { slidesToShow: 2 } },
+                { breakpoint: 480, settings: { slidesToShow: 1 } },
+              ]}
             >
-              <div className="text-2xl font-bold mb-1 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-                {smartData.smart_ip_title1}
-              </div>
-              <div className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#00ADE7] to-[#305292] bg-clip-text text-transparent">
-                {smartData.smart_ip_title2}
-              </div>
-              <div className="text-start mx-2 mt-5 text-gray-700 text-xl">
-                {extractRichText(smartData.smart_ip_description)}
-              </div>
-              <div className="mx-2 my-10">
-                <ConfigProvider
-                  theme={{
-                    token: {
-                      colorPrimary: "#00ADE7",
-                      colorPrimaryHover: "#305292",
-                      colorPrimaryActive: "#27AAE1",
-                    },
-                  }}
-                >
-                  <Space>
-                    <Link
-                      to={smartData.smart_ip_button_link?.trim() || "/products"}
-                    >
-                      <Button
-                        type="primary"
-                        size="large"
-                        icon={<AntDesignOutlined />}
-                        className="font-semibold shadow-md bg-gradient-to-r from-[#00ADE7] via-[#305292] to-[#27AAE1] border-0 hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-300"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, #00ADE7 0%, #305292 50%, #27AAE1 100%)",
-                          borderRadius: "10px",
-                        }}
-                      >
-                        <span className="text-white">
-                          {smartData.smart_ip_button_text}
-                        </span>
-                      </Button>
-                    </Link>
-                  </Space>
-                </ConfigProvider>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ x: 200, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-            >
-              <img
-                src={getImageUrl(smartData.smart_ip_image)}
-                alt={smartData.smart_ip_title1}
-                className="w-full h-auto rounded-lg"
-              />
-            </motion.div>
+              {products.productcards.map((product, i) => (
+                <div key={i} className="px-3">
+                  <div className="bg-gray-50 rounded-xl p-6 text-center shadow hover:shadow-lg transition">
+                    {product.image && (
+                      <img
+                        src={getMediaUrl(product.image)}
+                        alt={product.name}
+                        className="h-28 mx-auto mb-4 object-contain"
+                      />
+                    )}
+                    <h4 className="font-semibold text-gray-800">
+                      {product.name}
+                    </h4>
+                  </div>
+                </div>
+              ))}
+            </Carousel>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ===== SCROLL TO TOP BUTTON ===== */}
-      <div>
-        <ScrollTop
-          target="window"
-          threshold={100}
-          className="w-12 h-12 rounded-full bg-gradient-to-r from-[#00ADE7] to-[#305292] flex items-center justify-center shadow-lg hover:scale-125 hover:-translate-y-1 transition-all duration-300 ease-out cursor-pointer"
-          icon={
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5M5 12l7-7 7 7" />
-            </svg>
-          }
-        />
-      </div>
+      {/* BUSINESS SOLUTIONS */}
+      {businessSolutions.BusinessSolutionscards?.length > 0 && (
+        <div className="bg-gray-50 py-16 px-6 lg:px-20">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+              {businessSolutions.title}
+            </h2>
+            <p className="text-gray-600 text-lg mt-2 mb-12">
+              {businessSolutions.description}
+            </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {businessSolutions.BusinessSolutionscards.map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden group transition-all duration-300"
+                >
+                  <div className="h-56 overflow-hidden">
+                    {item.image ? (
+                      <img
+                        src={getMediaUrl(item.image)}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-600 mt-2 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VELOCITY SERIES */}
+      {velocity.velocity_image && (
+        <div className="py-16 px-6 lg:px-20">
+          <div className="max-w-7xl mx-auto lg:grid grid-cols-2 gap-12 items-center">
+            <div>
+              <img
+                src={getMediaUrl(velocity.velocity_image)}
+                alt="Velocity Series"
+                className="w-full rounded-lg shadow-lg"
+              />
+            </div>
+            <div className="mt-8 lg:mt-0">
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+                {velocity.velocity_title1}
+              </h2>
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292] mt-1">
+                {velocity.velocity_title2}
+              </h3>
+              <p className="text-gray-600 text-lg mt-4 leading-relaxed">
+                {extractRichText(velocity.velocity_description)}
+              </p>
+              <div className="mt-8">
+                <Link to={velocity.velocity_button_link || "/products"}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<AntDesignOutlined />}
+                    className="bg-gradient-to-r from-[#00ADE7] to-[#305292] border-0 font-semibold"
+                  >
+                    {velocity.velocity_button_text || "View More"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SMART IP CAMERAS */}
+      {smartData.smart_ip_image && (
+        <div className="bg-gray-50 py-16 px-6 lg:px-20">
+          <div className="max-w-7xl mx-auto lg:grid grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292]">
+                {smartData.smart_ip_title1}
+              </h2>
+              <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADE7] to-[#305292] mt-1">
+                {smartData.smart_ip_title2}
+              </h3>
+              <p className="text-gray-600 text-lg mt-4 leading-relaxed">
+                {extractRichText(smartData.smart_ip_description)}
+              </p>
+              <div className="mt-8">
+                <Link to={smartData.smart_ip_button_link || "/products"}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<AntDesignOutlined />}
+                    className="bg-gradient-to-r from-[#00ADE7] to-[#305292] border-0 font-semibold"
+                  >
+                    {smartData.smart_ip_button_text || "View More"}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="mt-8 lg:mt-0">
+              <img
+                src={getMediaUrl(smartData.smart_ip_image)}
+                alt="Smart IP Cameras"
+                className="w-full rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCROLL TO TOP */}
+      <ScrollTop
+        threshold={100}
+        className="fixed bottom-5 right-5 w-12 h-12 rounded-full bg-gradient-to-r from-[#00ADE7] to-[#305292] flex items-center justify-center shadow-lg hover:scale-110 transition cursor-pointer z-50"
+        icon={
+          <svg
+            className="w-5 h-5 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 19V5M5 12l7-7 7 7" />
+          </svg>
+        }
+      />
     </div>
   );
 };
