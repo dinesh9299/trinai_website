@@ -160,18 +160,6 @@
 // };
 
 // src/services/strapiApi.js
-// ✅ FINAL GUARANTEED WORKING VERSION - Strapi v5 Compatible
-// Uses simple populate=* + external_image_url for ALL images
-
-// src/services/strapiApi.js
-// ✅ FINAL VERSION - All features + VMS integration
-// Compatible with Strapi v4.x and v5.x
-
-// src/services/strapiApi.js
-// ✅ FIXED VERSION - Works with Strapi v4/v5
-// Uses simple populate syntax to avoid "Invalid key related" error
-
-// src/services/strapiApi.js
 // ✅ FINAL VERSION - Strapi v5 compatible with detailed_sections
 const API_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
 
